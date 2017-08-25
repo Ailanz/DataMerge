@@ -68,8 +68,6 @@ public class AlphaVantageApi {
 
     private static JsonNode getJsonNode(String url) {
         URL jsonUrl = null;
-        JsonNode node;
-
         try {
             jsonUrl = new URL(url);
         } catch (MalformedURLException e) {
@@ -80,7 +78,6 @@ public class AlphaVantageApi {
             try {
                 return mapper.readValue(jsonUrl, JsonNode.class);
             } catch (IOException e) {
-                e.printStackTrace();
                 System.err.println("Retrying... " + jsonUrl.toString());
             }
         }

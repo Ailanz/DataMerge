@@ -11,10 +11,11 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, URISyntaxException, SQLException {
+    public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
         Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
 //        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
         scan.nextLine();
@@ -43,6 +44,8 @@ public class Main {
                 }};
                 pool.execute(task);
         }
+//        pool.awaitTermination(1, TimeUnit.DAYS);
+        pool.shutdown();
         System.out.println("Hello World!");
     }
 
