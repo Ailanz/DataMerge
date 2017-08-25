@@ -15,16 +15,18 @@ import java.util.concurrent.Executors;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException {
-        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
-//        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
+//        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
+        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
         scan.nextLine();
 
         List<String> symbols = new LinkedList<>();
         int count = 0;
         while (scan.hasNext()) {
             count++;
-            symbols.add(scan.nextLine().split("\t")[0]);
+            symbols.add(scan.nextLine().split("\t")[0] + ".to");
         }
+
+        SqliteDriver.insertStockSymbols(symbols);
         System.out.println(count);
 
         ExecutorService pool = Executors.newFixedThreadPool(10);
@@ -32,7 +34,7 @@ public class Main {
 
         for (String sym : symbols) {
             Runnable task = () -> {
-                List<StockPrice> prices = DailyPriceGrabber.getStockPrices(sym + ".to");
+                List<StockPrice> prices = DailyPriceGrabber.getStockPrices(sym);
                 if (prices == null) {
                     System.out.println("Missing: " + sym);
                 } else {
