@@ -16,6 +16,19 @@ public class SqliteDriver {
     static Statement statement = null;
     static String stockPriceInsertQuery = "insert into stockprice values";
     static String stockValues = "('%s', %s, %s, %s, %s, %s, date('%s')),";
+
+//    "CREATE TABLE `StockPrice` (\n"+
+//            "\t`SYMBOL`\tTEXT,\n"+
+//            "\t`HIGH`\tNUMERIC,\n"+
+//            "\t`LOW`\tNUMERIC,\n"+
+//            "\t`OPEN`\tNUMERIC,\n"+
+//            "\t`CLOSE`\tNUMERIC,\n"+
+//            "\t`VOLUME`\tNUMERIC,\n"+
+//            "\t`DATE`\tTEXT,\n"+
+//            "\tPRIMARY KEY(SYMBOL,DATE)\n"+
+//            ");"
+
+
     static {
         try {
             Class.forName("org.sqlite.JDBC");
