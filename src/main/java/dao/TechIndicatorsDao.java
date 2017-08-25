@@ -2,7 +2,7 @@ package dao;
 
 import java.time.LocalDate;
 
-public class TechIndicators {
+public class TechIndicatorsDao {
     int stockId;
     LocalDate date;
 }

@@ -2,7 +2,7 @@ package dao;
 
 import java.time.LocalDate;
 
-public class StockPrice {
+public class StockPriceDao {
     String symbol;
     LocalDate date;
     double high;
@@ -11,7 +11,7 @@ public class StockPrice {
     double close;
     long volume;
 
-    public StockPrice(String symbol, LocalDate date, double open, double high, double low, double close, long volume) {
+    public StockPriceDao(String symbol, LocalDate date, double open, double high, double low, double close, long volume) {
         this.symbol = symbol;
         this.date = date;
         this.high = high;

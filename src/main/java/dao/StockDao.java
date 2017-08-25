@@ -1,6 +1,6 @@
 package dao;
 
-public class Stock {
+public class StockDao {
     int id;
     String symbol;
     String sector;

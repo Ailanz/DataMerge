@@ -1,4 +1,4 @@
-import dao.StockPrice;
+import dao.StockPriceDao;
 import db.SqliteDriver;
 import grabber.DailyPriceGrabber;
 
@@ -15,8 +15,8 @@ import java.util.concurrent.Executors;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException {
-//        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
-        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
+        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
+//        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
         scan.nextLine();
 
         List<String> symbols = new LinkedList<>();
@@ -34,7 +34,7 @@ public class Main {
 
         for (String sym : symbols) {
             Runnable task = () -> {
-                List<StockPrice> prices = DailyPriceGrabber.getStockPrices(sym);
+                List<StockPriceDao> prices = DailyPriceGrabber.getStockPrices(sym);
                 if (prices == null) {
                     System.out.println("Missing: " + sym);
                 } else {

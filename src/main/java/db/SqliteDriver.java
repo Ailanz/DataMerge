@@ -1,6 +1,6 @@
 package db;
 
-import dao.StockPrice;
+import dao.StockPriceDao;
 
 import java.sql.*;
 import java.util.List;
@@ -32,7 +32,8 @@ public class SqliteDriver {
     static {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
+//            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
+            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();
@@ -63,11 +64,11 @@ public class SqliteDriver {
     }
 
 
-    public static synchronized void insertStockPrice(List<StockPrice> stockPrices) {
+    public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
         String query = stockPriceInsertQuery;
         String stockValues = "('%s', %s, %s, %s, %s, %s, date('%s')),";
 
-        for (StockPrice stockPrice : stockPrices) {
+        for (StockPriceDao stockPrice : stockPrices) {
             query += String.format(stockValues, stockPrice.getSymbol(), stockPrice.getHigh(), stockPrice.getLow(), stockPrice.getOpen(),
                     stockPrice.getClose(), stockPrice.getVolume(), stockPrice.getDate().toString());
         }
