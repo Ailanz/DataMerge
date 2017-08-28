@@ -2,7 +2,6 @@ package grabber;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import dao.StockPriceDao;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -20,7 +19,7 @@ public class AlphaVantageApi {
     static String url = "https://www.alphavantage.co/query?function=%s&symbol=%s&outputsize=full&apikey=72OFKJ7KN7414UCF";
     static ObjectMapper mapper = new ObjectMapper();
 
-    public static  List<ResultData> getResult(String function, String symbol){
+    public static List<ResultData> getResult(String function, String symbol) {
         String targetUrl = String.format(url, function, symbol);
         JsonNode node = getJsonNode(targetUrl);
         if (node == null) {
@@ -39,13 +38,13 @@ public class AlphaVantageApi {
 
         try {
             list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(LocalDate.parse(s.getKey().split(" ")[0], formatter), s.getValue())));
-        } catch (Exception e){
+        } catch (Exception e) {
             System.err.println("Error: " + url);
         }
 
         dates.remove(0);   //exclude current incomplete data
         List<ResultData> ret = new LinkedList<>();
-        for(Pair<LocalDate, JsonNode>  p : dates) {
+        for (Pair<LocalDate, JsonNode> p : dates) {
             HashMap<String, JsonNode> data = new HashMap<>();
             p.getRight().fields().forEachRemaining(s -> data.put(s.getKey(), s.getValue()));
             ret.add(new ResultData(p.getLeft(), data));
@@ -65,7 +64,7 @@ public class AlphaVantageApi {
         for (int i = 0; i < 3; i++) {  //retry = 3
             try {
                 JsonNode node = mapper.readValue(jsonUrl, JsonNode.class);
-                if(node.size()!=0) {
+                if (node.size() != 0) {
                     return node;
                 }
             } catch (IOException e) {
@@ -83,7 +82,7 @@ class ResultData {
     private LocalDate date;
     private HashMap<String, JsonNode> data;
 
-    public ResultData(LocalDate date,  HashMap<String, JsonNode> data) {
+    public ResultData(LocalDate date, HashMap<String, JsonNode> data) {
         this.date = date;
         this.data = data;
     }
@@ -92,8 +91,7 @@ class ResultData {
         return date;
     }
 
-    public  HashMap<String, JsonNode> getData() {
+    public HashMap<String, JsonNode> getData() {
         return data;
     }
-
 }

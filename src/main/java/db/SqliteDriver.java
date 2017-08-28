@@ -1,8 +1,13 @@
 package db;
 
 import dao.StockPriceDao;
+import external.StockExchange;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -18,23 +23,23 @@ public class SqliteDriver {
     static String stockPriceInsertQuery = "insert into stockprice values";
     static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-
-    static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (" +
-            "'SYMBOL' TEXT," +
-            "'HIGH' NUMERIC," +
-            "'LOW' NUMERIC," +
-            "'OPEN' NUMERIC," +
-            "'CLOSE' NUMERIC," +
-            "'VOLUME' NUMERIC," +
-            "'DATE' TEXT," +
-            "PRIMARY KEY(SYMBOL,DATE)" +
-            ");";
-
-    static String stockTableQuery = "CREATE TABLE `Stock` (" +
-            "'SYMBOL' TEXT," +
-            "'UPDATED' TEXT," +
-            " PRIMARY KEY(SYMBOL)" +
-            ");";
+//
+//    static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (" +
+//            "'SYMBOL' TEXT," +
+//            "'HIGH' NUMERIC," +
+//            "'LOW' NUMERIC," +
+//            "'OPEN' NUMERIC," +
+//            "'CLOSE' NUMERIC," +
+//            "'VOLUME' NUMERIC," +
+//            "'DATE' TEXT," +
+//            "PRIMARY KEY(SYMBOL,DATE)" +
+//            ");";
+//
+//    static String stockTableQuery = "CREATE TABLE `Stock` (" +
+//            "'SYMBOL' TEXT," +
+//            "'UPDATED' TEXT," +
+//            " PRIMARY KEY(SYMBOL)" +
+//            ");";
 
     static {
         try {
@@ -51,7 +56,7 @@ public class SqliteDriver {
         }
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
         System.out.println("lol");
@@ -71,8 +76,10 @@ public class SqliteDriver {
 
             TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
                     .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
+                    .withColumn("EXCHANGE", TableBuilder.FIELD_TYPE.TEXT)
                     .withColumn("UPDATED", TableBuilder.FIELD_TYPE.TEXT)
                     .withprimaryKeys("SYMBOL");
+
             statement.execute(stockTableBuilder.generateQuery());
             statement.execute(stockPriceTableBuilder.generateQuery());
         } catch (SQLException e) {
@@ -81,10 +88,10 @@ public class SqliteDriver {
         }
     }
 
-    public static synchronized void insertStockSymbols(List<String> symbols) {
-        String query = "insert into stock (SYMBOL, UPDATED) values ";
+    public static synchronized void insertStockSymbols(List<String> symbols, StockExchange exchange) {
+        String query = "insert into stock (SYMBOL, EXCHANGE, UPDATED) values ";
         for (String s : symbols) {
-            query += String.format("('%s',date('%s')),", s, LocalDate.now());
+            query += String.format("('%s','%s', date('%s')),", s, exchange.name(), LocalDate.now());
         }
         executeInsert(query);
 
@@ -111,7 +118,7 @@ public class SqliteDriver {
         }
     }
 
-    public static List<StockPriceDao> getAllStockPrices(String symbol){
+    public static List<StockPriceDao> getAllStockPrices(String symbol) {
         String query = String.format("select * from stockprice where symbol = '%s'", symbol);
         List<StockPriceDao> stockPrices = new LinkedList<>();
 
@@ -124,7 +131,7 @@ public class SqliteDriver {
         return null;
     }
 
-    public static List<StockPriceDao> getAllStockPrices(){
+    public static List<StockPriceDao> getAllStockPrices() {
         String query = "select * from stockprice";
         List<StockPriceDao> stockPrices = new LinkedList<>();
 
@@ -141,7 +148,7 @@ public class SqliteDriver {
         List<StockPriceDao> stockPrices = new LinkedList<>();
 
         try {
-            while(rs.next()){
+            while (rs.next()) {
                 StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
                         rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
                         rs.getDouble("CLOSE"), rs.getLong("VOLUME"));

@@ -1,18 +1,14 @@
 package grabber;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dao.StockPriceDao;
-import org.apache.commons.lang3.tuple.Pair;
+import db.SqliteDriver;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static grabber.AlphaVantageApi.getResult;
 
@@ -21,16 +17,40 @@ public class DailyPriceGrabber {
     public static List<StockPriceDao> getStockPrices(String stockSymbol) {
         List<ResultData> data = getResult(AlphaVantageApi.TIME_SERIES_DAILY, stockSymbol);
 
-        if(data == null){
+        if (data == null) {
             return null;
         }
 
         List<StockPriceDao> ret = new LinkedList<>();
-        for(ResultData r : data) {
+        for (ResultData r : data) {
             ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
                     r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. volume").asLong()));
         }
 
         return ret;
+    }
+
+    //Populate Stock Prices and Remove ununsed Stock symbols
+    public static void populateStockPrices(List<String> symbols) throws InterruptedException {
+        ExecutorService pool = Executors.newFixedThreadPool(5);
+
+        List<String> invalidSymbols = new CopyOnWriteArrayList<>();
+        for (String sym : symbols) {
+            Runnable task = () -> {
+                List<StockPriceDao> prices = DailyPriceGrabber.getStockPrices(sym);
+                if (prices == null) {
+                    invalidSymbols.add(sym);
+                    System.out.println("Missing: " + sym);
+                } else {
+                    SqliteDriver.insertStockPrice(prices);
+                    System.out.println("Processed: " + sym);
+                }
+            };
+            pool.execute(task);
+        }
+        pool.shutdown();
+        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+
+        invalidSymbols.stream().forEach(s -> symbols.remove(s));
     }
 }
