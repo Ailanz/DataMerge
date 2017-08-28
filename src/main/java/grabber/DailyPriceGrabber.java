@@ -14,9 +14,23 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static grabber.AlphaVantageApi.getResult;
+
 public class DailyPriceGrabber {
 
     public static List<StockPriceDao> getStockPrices(String stockSymbol) {
-        return AlphaVantageApi.getStockPrices(stockSymbol);
+        List<ResultData> data = getResult(AlphaVantageApi.TIME_SERIES_DAILY, stockSymbol);
+
+        if(data == null){
+            return null;
+        }
+
+        List<StockPriceDao> ret = new LinkedList<>();
+        for(ResultData r : data) {
+            ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
+                    r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. volume").asLong()));
+        }
+
+        return ret;
     }
 }

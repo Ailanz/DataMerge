@@ -21,7 +21,8 @@ public class AlphaVantageApi {
     static ObjectMapper mapper = new ObjectMapper();
 
     public static  List<ResultData> getResult(String function, String symbol){
-        JsonNode node = getJsonNode(String.format(url, function, symbol));
+        String targetUrl = String.format(url, function, symbol);
+        JsonNode node = getJsonNode(targetUrl);
         if (node == null) {
             return null;
         }
@@ -36,31 +37,18 @@ public class AlphaVantageApi {
             return null;
         }
 
-        list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(LocalDate.parse(s.getKey().split(" ")[0], formatter), s.getValue())));
+        try {
+            list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(LocalDate.parse(s.getKey().split(" ")[0], formatter), s.getValue())));
+        } catch (Exception e){
+            System.err.println("Error: " + url);
+        }
 
         dates.remove(0);   //exclude current incomplete data
-        List<StockPriceDao> prices = new LinkedList<>();
         List<ResultData> ret = new LinkedList<>();
         for(Pair<LocalDate, JsonNode>  p : dates) {
             HashMap<String, JsonNode> data = new HashMap<>();
             p.getRight().fields().forEachRemaining(s -> data.put(s.getKey(), s.getValue()));
             ret.add(new ResultData(p.getLeft(), data));
-        }
-
-        return ret;
-    }
-
-    public static List<StockPriceDao> getStockPrices(String stockSymbol) {
-        List<ResultData> data = getResult(TIME_SERIES_DAILY, stockSymbol);
-
-        if(data == null){
-            return null;
-        }
-
-        List<StockPriceDao> ret = new LinkedList<>();
-        for(ResultData r : data) {
-            ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
-                    r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. volume").asLong()));
         }
 
         return ret;
@@ -76,7 +64,10 @@ public class AlphaVantageApi {
 
         for (int i = 0; i < 3; i++) {  //retry = 3
             try {
-                return mapper.readValue(jsonUrl, JsonNode.class);
+                JsonNode node = mapper.readValue(jsonUrl, JsonNode.class);
+                if(node.size()!=0) {
+                    return node;
+                }
             } catch (IOException e) {
                 System.err.println("Retrying... " + jsonUrl.toString());
             }

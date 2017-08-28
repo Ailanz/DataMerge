@@ -3,6 +3,7 @@ package db;
 import dao.StockPriceDao;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -13,27 +14,28 @@ public class SqliteDriver {
     static Statement statement = null;
     static String stockPriceInsertQuery = "insert into stockprice values";
 
-    static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (\n" +
-            "\t`SYMBOL`\tTEXT,\n" +
-            "\t`HIGH`\tNUMERIC,\n" +
-            "\t`LOW`\tNUMERIC,\n" +
-            "\t`OPEN`\tNUMERIC,\n" +
-            "\t`CLOSE`\tNUMERIC,\n" +
-            "\t`VOLUME`\tNUMERIC,\n" +
-            "\t`DATE`\tTEXT,\n" +
-            "\tPRIMARY KEY(SYMBOL,DATE)\n" +
+    static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (" +
+            "'SYMBOL' TEXT," +
+            "'HIGH' NUMERIC," +
+            "'LOW' NUMERIC," +
+            "'OPEN' NUMERIC," +
+            "'CLOSE' NUMERIC," +
+            "'VOLUME' NUMERIC," +
+            "'DATE' TEXT," +
+            "PRIMARY KEY(SYMBOL,DATE)" +
             ");";
 
-    static String stockTableQuery = "CREATE TABLE `Stock` (\n" +
-            "\t`ID`\tINTEGER PRIMARY KEY AUTOINCREMENT,\n" +
-            "\t`SYMBOL`\tTEXT\n" +
+    static String stockTableQuery = "CREATE TABLE `Stock` (" +
+            "'SYMBOL' TEXT," +
+            "'UPDATED' TEXT," +
+            "PRIMARY KEY(`SYMBOL`)" +
             ");";
 
     static {
         try {
             Class.forName("org.sqlite.JDBC");
-//            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
-            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
+            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
+//            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();
@@ -42,6 +44,9 @@ public class SqliteDriver {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main(String args[]){
     }
 
     static void createTables() {
@@ -54,9 +59,9 @@ public class SqliteDriver {
     }
 
     public static synchronized void insertStockSymbols(List<String> symbols) {
-        String query = "insert into stock (SYMBOL) values ";
+        String query = "insert into stock (SYMBOL, UPDATED) values ";
         for (String s : symbols) {
-            query += String.format("('%s'),", s);
+            query += String.format("('%s',date('%s')),", s, LocalDate.now());
         }
         executeInsert(query);
 
@@ -78,7 +83,6 @@ public class SqliteDriver {
     private static void executeInsert(String query) {
         try {
             statement.executeUpdate(query.substring(0, query.length() - 1));
-            System.out.println("");
         } catch (SQLException e) {
             e.printStackTrace();
         }
