@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
  * Created by Ailan on 8/23/2017.
  */
@@ -32,7 +33,7 @@ public class SqliteDriver {
     static String stockTableQuery = "CREATE TABLE `Stock` (" +
             "'SYMBOL' TEXT," +
             "'UPDATED' TEXT," +
-            "PRIMARY KEY(`SYMBOL`)" +
+            " PRIMARY KEY(SYMBOL)" +
             ");";
 
     static {
@@ -52,15 +53,30 @@ public class SqliteDriver {
 
     public static void main(String args[]){
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
-        List<StockPriceDao> prices = getAllStockPrices();
+//        List<StockPriceDao> prices = getAllStockPrices();
         System.out.println("lol");
     }
 
     static void createTables() {
         try {
-            statement.execute(stockTableQuery);
-            statement.execute(stockPriceTableQuery);
+            TableBuilder stockPriceTableBuilder = TableBuilder.aBuilder().withTableName("StockPrice")
+                    .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
+                    .withColumn("HIGH", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("LOW", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("OPEN", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
+                    .withprimaryKeys("SYMBOL", "DATE");
+
+            TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
+                    .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
+                    .withColumn("UPDATED", TableBuilder.FIELD_TYPE.TEXT)
+                    .withprimaryKeys("SYMBOL");
+            statement.execute(stockTableBuilder.generateQuery());
+            statement.execute(stockPriceTableBuilder.generateQuery());
         } catch (SQLException e) {
+            e.printStackTrace();
             System.out.println("Already exists.. moving on");
         }
     }
