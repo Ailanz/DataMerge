@@ -4,6 +4,8 @@ import dao.StockPriceDao;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -13,6 +15,8 @@ public class SqliteDriver {
     static Connection connection = null;
     static Statement statement = null;
     static String stockPriceInsertQuery = "insert into stockprice values";
+    static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
 
     static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (" +
             "'SYMBOL' TEXT," +
@@ -34,8 +38,8 @@ public class SqliteDriver {
     static {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
-//            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
+//            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
+            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();
@@ -47,6 +51,8 @@ public class SqliteDriver {
     }
 
     public static void main(String args[]){
+        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
+        System.out.println("lol");
     }
 
     static void createTables() {
@@ -86,6 +92,25 @@ public class SqliteDriver {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public static List<StockPriceDao> getAllStockPrices(String symbol){
+        String query = String.format("select * from stockprice where symbol = '%s'", symbol);
+        List<StockPriceDao> stockPrices = new LinkedList<>();
+
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            while(rs.next()){
+                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
+                        rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
+                        rs.getDouble("CLOSE"), rs.getLong("VOLUME"));
+                stockPrices.add(sp);
+            }
+            return stockPrices;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

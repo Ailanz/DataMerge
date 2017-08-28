@@ -17,8 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
-//        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
-        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
+        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
+//        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
         scan.nextLine();
 
         List<String> symbols = new LinkedList<>();
