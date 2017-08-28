@@ -14,13 +14,61 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class AlphaVantageApi {
-    public static String TIME_SERIES_DAILY = "TIME_SERIES_DAILY";
-    static String url = "https://www.alphavantage.co/query?function=%s&symbol=%s&outputsize=full&apikey=72OFKJ7KN7414UCF";
+public class AlphaVantageBuilder {
+
+    public enum Function {
+        TIME_SERIES_DAILY,
+        ADX
+    }
+
+    public enum OutputSize {
+        FULL,
+        COMPACT
+    }
+
+    static String baseUrl = "https://www.alphavantage.co/query?";
+    static String apikey = "apikey=72OFKJ7KN7414UCF";
+
     static ObjectMapper mapper = new ObjectMapper();
 
-    public static List<ResultData> getResult(String function, String symbol) {
-        String targetUrl = String.format(url, function, symbol);
+    private List<Pair<String, String>> params = new LinkedList<>();
+
+    public static void main(String[] args) {
+//        List<ResultData> result = getResult("ADX", "ANX.to");
+//        System.out.println(result.size());
+    }
+
+    private AlphaVantageBuilder() {
+    }
+
+    public static AlphaVantageBuilder aBuilder() {
+        return new AlphaVantageBuilder();
+    }
+
+    public AlphaVantageBuilder withFunction(Function function) {
+        params.add(Pair.of("function", function.name()));
+        return this;
+    }
+
+    public AlphaVantageBuilder withSymbol(String symbol) {
+        params.add(Pair.of("symbol", symbol));
+        return this;
+    }
+
+    public AlphaVantageBuilder withOutputSize(OutputSize size) {
+        params.add(Pair.of("outputsize", size.name()));
+        return this;
+    }
+
+    public List<ResultData> execute() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(baseUrl);
+        params.forEach(s -> sb.append(s.getKey() + "=" + s.getValue() + "&"));
+        sb.append(apikey);
+        return getResult(sb.toString());
+    }
+
+    private static List<ResultData> getResult(String targetUrl) {
         JsonNode node = getJsonNode(targetUrl);
         if (node == null) {
             return null;
@@ -39,7 +87,7 @@ public class AlphaVantageApi {
         try {
             list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(LocalDate.parse(s.getKey().split(" ")[0], formatter), s.getValue())));
         } catch (Exception e) {
-            System.err.println("Error: " + url);
+            System.err.println("Error: " + targetUrl);
         }
 
         dates.remove(0);   //exclude current incomplete data

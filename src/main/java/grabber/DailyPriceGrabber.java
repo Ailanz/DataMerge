@@ -10,13 +10,16 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static grabber.AlphaVantageApi.getResult;
-
 public class DailyPriceGrabber {
 
     public static List<StockPriceDao> getStockPrices(String stockSymbol) {
-        List<ResultData> data = getResult(AlphaVantageApi.TIME_SERIES_DAILY, stockSymbol);
 
+        AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageBuilder.Function.TIME_SERIES_DAILY)
+                .withOutputSize(AlphaVantageBuilder.OutputSize.FULL)
+                .withSymbol(stockSymbol);
+
+        List<ResultData> data = builder.execute();
         if (data == null) {
             return null;
         }

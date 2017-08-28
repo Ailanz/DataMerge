@@ -2,14 +2,12 @@ package db;
 
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class TableBuilder {
@@ -24,7 +22,7 @@ public class TableBuilder {
     private String tableName = "";
 
     private Set<String> primaryKey = new LinkedHashSet<>();
-    private List<Map.Entry<String, FIELD_TYPE>> columns = new LinkedList<>();
+    private List<Pair<String, FIELD_TYPE>> columns = new LinkedList<>();
 
     public static void main(String args[]) {
 
@@ -54,7 +52,7 @@ public class TableBuilder {
     }
 
     public TableBuilder withColumn(String fieldName, FIELD_TYPE type, boolean isPrimaryKey) {
-        columns.add(new AbstractMap.SimpleEntry<>(fieldName, type));
+        columns.add(Pair.of(fieldName, type));
         if (isPrimaryKey) {
             primaryKey.add(fieldName);
         }
