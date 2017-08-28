@@ -51,7 +51,8 @@ public class SqliteDriver {
     }
 
     public static void main(String args[]){
-        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
+//        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
+        List<StockPriceDao> prices = getAllStockPrices();
         System.out.println("lol");
     }
 
@@ -60,7 +61,7 @@ public class SqliteDriver {
             statement.execute(stockTableQuery);
             statement.execute(stockPriceTableQuery);
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.out.println("Already exists.. moving on");
         }
     }
 
@@ -100,17 +101,39 @@ public class SqliteDriver {
 
         try {
             ResultSet rs = statement.executeQuery(query);
-            while(rs.next()){
-                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
-                        rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
-                        rs.getDouble("CLOSE"), rs.getLong("VOLUME"));
-                stockPrices.add(sp);
-            }
-            return stockPrices;
+            return parseStockPrice(rs);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
+    public static List<StockPriceDao> getAllStockPrices(){
+        String query = "select * from stockprice";
+        List<StockPriceDao> stockPrices = new LinkedList<>();
+
+        try {
+            ResultSet rs = statement.executeQuery(query);
+            return parseStockPrice(rs);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static List<StockPriceDao> parseStockPrice(ResultSet rs) {
+        List<StockPriceDao> stockPrices = new LinkedList<>();
+
+        try {
+            while(rs.next()){
+                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
+                        rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
+                        rs.getDouble("CLOSE"), rs.getLong("VOLUME"));
+                stockPrices.add(sp);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stockPrices;
+    }
 }
