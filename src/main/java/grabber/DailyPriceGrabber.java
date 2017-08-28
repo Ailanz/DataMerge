@@ -15,7 +15,7 @@ public class DailyPriceGrabber {
     public static List<StockPriceDao> getStockPrices(String stockSymbol) {
 
         AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
-                .withFunction(AlphaVantageEnum.Function.TIME_SERIES_DAILY)
+                .withFunction(AlphaVantageEnum.Function.TIME_SERIES_DAILY_ADJUSTED)
                 .withOutputSize(AlphaVantageEnum.OutputSize.FULL)
                 .withSymbol(stockSymbol);
 
@@ -27,7 +27,8 @@ public class DailyPriceGrabber {
         List<StockPriceDao> ret = new LinkedList<>();
         for (ResultData r : data) {
             ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
-                    r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. volume").asLong()));
+                    r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. adjusted close").asDouble(),
+                    r.getData().get("6. volume").asLong(), r.getData().get("7. dividend amount").asDouble(), r.getData().get("8. split coefficient").asDouble()));
         }
 
         return ret;

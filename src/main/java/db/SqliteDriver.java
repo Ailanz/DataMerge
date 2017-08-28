@@ -71,6 +71,9 @@ public class SqliteDriver {
                     .withColumn("OPEN", TableBuilder.FIELD_TYPE.NUMERIC)
                     .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
                     .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("ADJUSTED_CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("DIVIDEND", TableBuilder.FIELD_TYPE.NUMERIC)
+                    .withColumn("SPLIT", TableBuilder.FIELD_TYPE.NUMERIC)
                     .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
                     .withprimaryKeys("SYMBOL", "DATE");
 
@@ -101,11 +104,12 @@ public class SqliteDriver {
 
     public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
         String query = stockPriceInsertQuery;
-        String stockValues = "('%s', %s, %s, %s, %s, %s, date('%s')),";
+        String stockValues = "('%s', %s, %s, %s, %s, %s, %s, %s, %s, date('%s')),";
 
         for (StockPriceDao stockPrice : stockPrices) {
             query += String.format(stockValues, stockPrice.getSymbol(), stockPrice.getHigh(), stockPrice.getLow(), stockPrice.getOpen(),
-                    stockPrice.getClose(), stockPrice.getVolume(), stockPrice.getDate().toString());
+                    stockPrice.getClose(), stockPrice.getVolume(), stockPrice.getAdjsutedClose(), stockPrice.getDividend(), stockPrice.getSplit(),
+                    stockPrice.getDate().toString());
         }
         executeInsert(query);
     }
@@ -151,7 +155,8 @@ public class SqliteDriver {
             while (rs.next()) {
                 StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
                         rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
-                        rs.getDouble("CLOSE"), rs.getLong("VOLUME"));
+                        rs.getDouble("CLOSE"),  rs.getDouble("ADJUSTED_CLOSE"), rs.getLong("VOLUME"),
+                        rs.getDouble("DIVIDEND"), rs.getDouble("SPLIT"));
                 stockPrices.add(sp);
             }
         } catch (SQLException e) {

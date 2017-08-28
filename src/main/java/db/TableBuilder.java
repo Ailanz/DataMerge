@@ -22,6 +22,7 @@ public class TableBuilder {
     private String tableName = "";
 
     private Set<String> primaryKey = new LinkedHashSet<>();
+
     private List<Pair<String, FIELD_TYPE>> columns = new LinkedList<>();
 
     public static void main(String args[]) {
@@ -62,6 +63,14 @@ public class TableBuilder {
     public TableBuilder withprimaryKeys(String... keys) {
         primaryKey.addAll(Arrays.asList(keys));
         return this;
+    }
+
+    public List<Pair<String, FIELD_TYPE>> getColumns() {
+        return columns;
+    }
+
+    public String getTableName() {
+        return tableName;
     }
 
     public String generateQuery() {
