@@ -15,8 +15,8 @@ public class DailyPriceGrabber {
     public static List<StockPriceDao> getStockPrices(String stockSymbol) {
 
         AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
-                .withFunction(AlphaVantageBuilder.Function.TIME_SERIES_DAILY)
-                .withOutputSize(AlphaVantageBuilder.OutputSize.FULL)
+                .withFunction(AlphaVantageEnum.Function.TIME_SERIES_DAILY)
+                .withOutputSize(AlphaVantageEnum.OutputSize.FULL)
                 .withSymbol(stockSymbol);
 
         List<ResultData> data = builder.execute();

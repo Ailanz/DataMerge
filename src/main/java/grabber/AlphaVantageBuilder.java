@@ -16,16 +16,6 @@ import java.util.List;
 
 public class AlphaVantageBuilder {
 
-    public enum Function {
-        TIME_SERIES_DAILY,
-        ADX
-    }
-
-    public enum OutputSize {
-        FULL,
-        COMPACT
-    }
-
     static String baseUrl = "https://www.alphavantage.co/query?";
     static String apikey = "apikey=72OFKJ7KN7414UCF";
 
@@ -34,8 +24,13 @@ public class AlphaVantageBuilder {
     private List<Pair<String, String>> params = new LinkedList<>();
 
     public static void main(String[] args) {
-//        List<ResultData> result = getResult("ADX", "ANX.to");
-//        System.out.println(result.size());
+        AlphaVantageBuilder builder = aBuilder()
+                .withSymbol("ANX.to")
+                .withFunction(AlphaVantageEnum.Function.ADX)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withTimePeriod(60);
+        List<ResultData> result = builder.execute();
+        System.out.println(result.size());
     }
 
     private AlphaVantageBuilder() {
@@ -45,7 +40,7 @@ public class AlphaVantageBuilder {
         return new AlphaVantageBuilder();
     }
 
-    public AlphaVantageBuilder withFunction(Function function) {
+    public AlphaVantageBuilder withFunction(AlphaVantageEnum.Function function) {
         params.add(Pair.of("function", function.name()));
         return this;
     }
@@ -55,8 +50,18 @@ public class AlphaVantageBuilder {
         return this;
     }
 
-    public AlphaVantageBuilder withOutputSize(OutputSize size) {
+    public AlphaVantageBuilder withOutputSize(AlphaVantageEnum.OutputSize size) {
         params.add(Pair.of("outputsize", size.name()));
+        return this;
+    }
+
+    public AlphaVantageBuilder withInterval(AlphaVantageEnum.Interval interval) {
+        params.add(Pair.of("interval", interval.name().toLowerCase()));
+        return this;
+    }
+
+    public AlphaVantageBuilder withTimePeriod(int period) {
+        params.add(Pair.of("time_period", String.valueOf(period)));
         return this;
     }
 
@@ -81,6 +86,7 @@ public class AlphaVantageBuilder {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         if (list.size() == 1) {
+            System.out.println("Cannot parse results: " + targetUrl);
             return null;
         }
 
@@ -119,6 +125,7 @@ public class AlphaVantageBuilder {
                 System.err.println("Retrying... " + jsonUrl.toString());
             }
         }
+
         System.err.println("Giving Up... " + jsonUrl.toString());
 
         return null;
