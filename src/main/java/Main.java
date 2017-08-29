@@ -1,5 +1,6 @@
 import dao.StockDao;
 import db.SqliteDriver;
+import external.GlobalUtil;
 import external.TSX;
 import grabber.DailyPriceGrabber;
 
@@ -13,8 +14,7 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
-        File file = new File("/var/tmp/TSX.txt");
-//        File file = new File("D:\\data\\TSX.txt");
+        File file = new File(GlobalUtil.TSX_FEED);
         List<StockDao> stocks = TSX.parseFeed(file);
         List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
 

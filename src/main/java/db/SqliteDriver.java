@@ -2,6 +2,7 @@ package db;
 
 import dao.StockDao;
 import dao.StockPriceDao;
+import external.GlobalUtil;
 import external.StockExchange;
 
 import java.sql.*;
@@ -21,8 +22,7 @@ public class SqliteDriver {
     static {
         try {
             Class.forName("org.sqlite.JDBC");
-//            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
-            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
+            connection = DriverManager.getConnection(GlobalUtil.jdbcCon);
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();

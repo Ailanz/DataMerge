@@ -4,6 +4,7 @@ import db.InsertionBuilder;
 import db.SqliteDriver;
 import db.TableBuilder;
 import external.GlobalUtil;
+import external.KeyDateFilter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StockPriceDao implements AbstractDao {
     String symbol;
@@ -25,6 +27,8 @@ public class StockPriceDao implements AbstractDao {
     double split;
     long volume;
 
+    static KeyDateFilter dateFiler = new KeyDateFilter();
+
     private static TableBuilder stockPriceTableBuilder = TableBuilder.aBuilder().withTableName("StockPrice")
             .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
             .withColumn("HIGH", TableBuilder.FIELD_TYPE.NUMERIC)
@@ -37,6 +41,11 @@ public class StockPriceDao implements AbstractDao {
             .withColumn("SPLIT", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL", "DATE");
+
+    static{
+        List<StockPriceDao> allPrices = getAllStockPrices();
+        allPrices.stream().forEach(s->dateFiler.add(s.getSymbol(), s.getDate()));
+    }
 
     public StockPriceDao(String symbol, LocalDate date, double high, double low, double open,
                          double close, double adjsutedClose, long volume, double dividend, double split) {
@@ -81,22 +90,18 @@ public class StockPriceDao implements AbstractDao {
 
     public static List<StockPriceDao> getAllStockPrices() {
         String query = "select * from stockprice";
-        List<StockPriceDao> stockPrices = new LinkedList<>();
-
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStockPrice(rs);
     }
 
     private static List<StockPriceDao> parseStockPrice(ResultSet rs) {
         List<StockPriceDao> stockPrices = new LinkedList<>();
-
         try {
             while (rs.next()) {
                 StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"),
-                        GlobalUtil.DATE_FORMAT),
-                        rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
-                        rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"), rs.getLong("VOLUME"),
-                        rs.getDouble("DIVIDEND"), rs.getDouble("SPLIT"));
+                        GlobalUtil.DATE_FORMAT), rs.getDouble("OPEN"), rs.getDouble("HIGH"),
+                        rs.getDouble("LOW"), rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"),
+                        rs.getLong("VOLUME"), rs.getDouble("DIVIDEND"), rs.getDouble("SPLIT"));
                 stockPrices.add(sp);
             }
         } catch (SQLException e) {
@@ -106,6 +111,15 @@ public class StockPriceDao implements AbstractDao {
     }
 
     public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
+        //Remove Everything already added
+        stockPrices = stockPrices.stream()
+                .filter(s -> dateFiler.isAfterOrEmpty(s.getSymbol(), s.getDate()))
+                .collect(Collectors.toList());
+
+        if(stockPrices.size()==0){
+            return;
+        }
+
         InsertionBuilder builder = InsertionBuilder.aBuilder();
         builder.withTableBuilder(stockPriceTableBuilder);
         stockPrices.stream().forEach(s -> builder.withParams(s.getParams()));
