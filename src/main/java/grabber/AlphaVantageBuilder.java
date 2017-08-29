@@ -51,7 +51,7 @@ public class AlphaVantageBuilder {
     }
 
     public AlphaVantageBuilder withOutputSize(AlphaVantageEnum.OutputSize size) {
-        params.add(Pair.of("outputsize", size.name()));
+        params.add(Pair.of("outputsize", size.name().toLowerCase()));
         return this;
     }
 
