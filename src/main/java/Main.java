@@ -1,33 +1,25 @@
+import dao.StockDao;
 import db.SqliteDriver;
-import external.StockExchange;
+import external.TSX;
 import grabber.DailyPriceGrabber;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
-//        Scanner scan = new Scanner(new File("/var/tmp/TSX.txt"));
-        Scanner scan = new Scanner(new File("D:\\data\\TSX.txt"));
-        scan.nextLine();
+        File file = new File("/var/tmp/TSX.txt");
+//        File file = new File("D:\\data\\TSX.txt");
+        List<StockDao> stocks = TSX.parseFeed(file);
+        List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
 
-        List<String> symbols = new LinkedList<>();
-        int count = 0;
-        while (scan.hasNext()) {
-            count++;
-            symbols.add(scan.nextLine().split("\t")[0] + ".to");
-        }
-
-        System.out.println(count);
-
-        DailyPriceGrabber.populateStockPrices(symbols);
-        SqliteDriver.insertStockSymbols(symbols, StockExchange.TSX);
+        DailyPriceGrabber.populateStockPrices(stockSymbols);
+        SqliteDriver.insertStockSymbols(stockSymbols, TSX.getExchange());
 
         System.out.println("Hello World!");
     }

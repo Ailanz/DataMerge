@@ -75,6 +75,7 @@ public class InsertionBuilder {
             sb.deleteCharAt(sb.length()-1);
             sb.append(')').append(',');
         });
+        sb.deleteCharAt(sb.length()-1);
         return sb.toString();
     }
 

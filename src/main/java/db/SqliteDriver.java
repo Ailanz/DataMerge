@@ -17,51 +17,12 @@ import java.util.List;
 public class SqliteDriver {
     static Connection connection = null;
     static Statement statement = null;
-    static String stockPriceInsertQuery = "insert into stockprice values";
-    static DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-//
-//    static String stockPriceTableQuery = "CREATE TABLE `StockPrice` (" +
-//            "'SYMBOL' TEXT," +
-//            "'HIGH' NUMERIC," +
-//            "'LOW' NUMERIC," +
-//            "'OPEN' NUMERIC," +
-//            "'CLOSE' NUMERIC," +
-//            "'VOLUME' NUMERIC," +
-//            "'DATE' TEXT," +
-//            "PRIMARY KEY(SYMBOL,DATE)" +
-//            ");";
-//
-//    static String stockTableQuery = "CREATE TABLE `Stock` (" +
-//            "'SYMBOL' TEXT," +
-//            "'UPDATED' TEXT," +
-//            " PRIMARY KEY(SYMBOL)" +
-//            ");";
-
-    static TableBuilder stockPriceTableBuilder = TableBuilder.aBuilder().withTableName("StockPrice")
-            .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
-            .withColumn("HIGH", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("LOW", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("OPEN", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("ADJUSTED_CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("DIVIDEND", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("SPLIT", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
-            .withprimaryKeys("SYMBOL", "DATE");
-
-    static TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
-            .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
-            .withColumn("EXCHANGE", TableBuilder.FIELD_TYPE.TEXT)
-            .withColumn("UPDATED", TableBuilder.FIELD_TYPE.TEXT)
-            .withprimaryKeys("SYMBOL");
 
     static {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
-//            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
+//            connection = DriverManager.getConnection("jdbc:sqlite:D:\\data\\stock.sqlite");
+            connection = DriverManager.getConnection("jdbc:sqlite:/var/tmp/stock.sqlite");
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();
@@ -74,85 +35,45 @@ public class SqliteDriver {
 
     public static void main(String args[]) {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
-        List<StockPriceDao> prices = getAllStockPrices();
+//        List<StockPriceDao> prices = getAllStockPrices();
         System.out.println("lol");
     }
 
     static void createTables() {
         try {
-            statement.execute(stockTableBuilder.generateQuery());
-            statement.execute(stockPriceTableBuilder.generateQuery());
+            statement.execute(StockDao.getTableBuilder().generateQuery());
+            statement.execute(StockPriceDao.getTableBuilder().generateQuery());
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Already exists.. moving on");
         }
     }
 
-    public static synchronized void insertStockSymbols(List<String> symbols, StockExchange exchange) {
+    public static synchronized void insertStockSymbols(List<String> symbols, String exchange) {
         LocalDate now = LocalDate.now();
         InsertionBuilder builder = InsertionBuilder.aBuilder()
-                .withTableBuilder(stockTableBuilder);
-        symbols.stream().forEach(s -> builder.withParams(new StockDao(s, exchange,now).getParams()));
+                .withTableBuilder(StockDao.getTableBuilder());
+        symbols.stream().forEach(s -> builder.withParams(new StockDao(s, exchange, now).getParams()));
         executeInsert(builder.execute());
     }
 
 
-    public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
-        InsertionBuilder builder = InsertionBuilder.aBuilder();
-        builder.withTableBuilder(stockPriceTableBuilder);
-        stockPrices.stream().forEach(s -> builder.withParams(s.getParams()));
-        executeInsert(builder.execute());
-    }
-
-    private static void executeInsert(String query) {
+    public static ResultSet executeQuery(String query) {
         try {
-            statement.executeUpdate(query.substring(0, query.length() - 1));
-        } catch (SQLException e) {
-            System.err.println(query.substring(0, query.length() - 1));
-            e.printStackTrace();
-        }
-    }
-
-    public static List<StockPriceDao> getAllStockPrices(String symbol) {
-        String query = String.format("select * from stockprice where symbol = '%s'", symbol);
-        List<StockPriceDao> stockPrices = new LinkedList<>();
-
-        try {
-            ResultSet rs = statement.executeQuery(query);
-            return parseStockPrice(rs);
+            return statement.executeQuery(query);
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public static List<StockPriceDao> getAllStockPrices() {
-        String query = "select * from stockprice";
-        List<StockPriceDao> stockPrices = new LinkedList<>();
-
+    public static void executeInsert(String query) {
         try {
-            ResultSet rs = statement.executeQuery(query);
-            return parseStockPrice(rs);
+            statement.executeUpdate(query);
         } catch (SQLException e) {
+            System.err.println(query);
             e.printStackTrace();
         }
-        return null;
     }
 
-    private static List<StockPriceDao> parseStockPrice(ResultSet rs) {
-        List<StockPriceDao> stockPrices = new LinkedList<>();
-
-        try {
-            while (rs.next()) {
-                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), dateFormat),
-                        rs.getDouble("OPEN"), rs.getDouble("HIGH"), rs.getDouble("LOW"),
-                        rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"), rs.getLong("VOLUME"),
-                        rs.getDouble("DIVIDEND"), rs.getDouble("SPLIT"));
-                stockPrices.add(sp);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return stockPrices;
-    }
 }

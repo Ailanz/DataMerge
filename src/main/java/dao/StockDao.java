@@ -1,5 +1,6 @@
 package dao;
 
+import db.TableBuilder;
 import external.StockExchange;
 
 import java.time.LocalDate;
@@ -8,10 +9,16 @@ import java.util.Map;
 
 public class StockDao implements AbstractDao{
     String symbol;
-    StockExchange exchange;
+    String exchange;
     LocalDate updated;
 
-    public StockDao(String symbol, StockExchange exchange, LocalDate updated) {
+    static TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
+            .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
+            .withColumn("EXCHANGE", TableBuilder.FIELD_TYPE.TEXT)
+            .withColumn("UPDATED", TableBuilder.FIELD_TYPE.TEXT)
+            .withprimaryKeys("SYMBOL");
+
+    public StockDao(String symbol, String exchange, LocalDate updated) {
         this.symbol = symbol;
         this.updated = updated;
         this.exchange = exchange;
@@ -21,7 +28,7 @@ public class StockDao implements AbstractDao{
         return symbol;
     }
 
-    public StockExchange getExchange() {
+    public String getExchange() {
         return exchange;
     }
 
@@ -29,12 +36,16 @@ public class StockDao implements AbstractDao{
         return updated;
     }
 
+    public static TableBuilder getTableBuilder() {
+        return stockTableBuilder;
+    }
+
 
     @Override
     public Map<String, String> getParams() {
         HashMap<String,String> map = new HashMap<>();
         map.put("SYMBOL", this.symbol);
-        map.put("EXCHANGE", exchange.name());
+        map.put("EXCHANGE", this.exchange);
         map.put("UPDATED", LocalDate.now().toString());
         return map;
     }

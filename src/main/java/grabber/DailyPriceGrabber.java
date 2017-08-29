@@ -46,7 +46,7 @@ public class DailyPriceGrabber {
                     invalidSymbols.add(sym);
                     System.out.println("Missing: " + sym);
                 } else {
-                    SqliteDriver.insertStockPrice(prices);
+                    StockPriceDao.insertStockPrice(prices);
                     System.out.println("Processed: " + sym);
                 }
             };
