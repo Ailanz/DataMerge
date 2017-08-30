@@ -2,6 +2,7 @@ package grabber;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -19,9 +20,14 @@ public class AlphaVantageBuilder {
     static String baseUrl = "https://www.alphavantage.co/query?";
     static String apikey = "apikey=72OFKJ7KN7414UCF";
 
-    static ObjectMapper mapper = new ObjectMapper();
+    static final ObjectMapper mapper = new ObjectMapper();
 
     private List<Pair<String, String>> params = new LinkedList<>();
+
+    static{
+        System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
+        System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+    }
 
     public static void main(String[] args) {
         AlphaVantageBuilder builder = aBuilder()
@@ -114,6 +120,7 @@ public class AlphaVantageBuilder {
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+
 
         for (int i = 0; i < 3; i++) {  //retry = 3
             try {

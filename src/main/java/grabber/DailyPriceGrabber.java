@@ -2,6 +2,7 @@ package grabber;
 
 import dao.StockPriceDao;
 import db.SqliteDriver;
+import external.GlobalUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,7 +17,7 @@ public class DailyPriceGrabber {
 
         AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.TIME_SERIES_DAILY_ADJUSTED)
-                .withOutputSize(AlphaVantageEnum.OutputSize.COMPACT)
+                .withOutputSize(AlphaVantageEnum.OutputSize.FULL)
                 .withSymbol(stockSymbol);
 
         List<ResultData> data = builder.execute();
@@ -36,24 +37,27 @@ public class DailyPriceGrabber {
 
     //Populate Stock Prices and Remove ununsed Stock symbols
     public static void populateStockPrices(List<String> symbols) throws InterruptedException {
-        ExecutorService pool = Executors.newFixedThreadPool(5);
+        ExecutorService pool = Executors.newFixedThreadPool(20);
 
         List<String> invalidSymbols = new CopyOnWriteArrayList<>();
         for (String sym : symbols) {
             Runnable task = () -> {
+                final long startTime = System.currentTimeMillis();
+
                 List<StockPriceDao> prices = DailyPriceGrabber.getStockPrices(sym);
                 if (prices == null) {
                     invalidSymbols.add(sym);
                     System.out.println("Missing: " + sym);
                 } else {
                     StockPriceDao.insertStockPrice(prices);
-                    System.out.println("Processed: " + sym);
+                    System.out.println("Processed: " + sym + " - " + prices.size() + " : "
+                            + (System.currentTimeMillis() - startTime) + " : " + GlobalUtil.getMemoryConsumption());
                 }
             };
             pool.execute(task);
         }
         pool.shutdown();
-        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
 
         invalidSymbols.stream().forEach(s -> symbols.remove(s));
     }

@@ -2,13 +2,9 @@ package db;
 
 import dao.StockDao;
 import dao.StockPriceDao;
-import external.GlobalUtil;
-import external.StockExchange;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.LinkedList;
 import java.util.List;
 
 
@@ -45,7 +41,7 @@ public class SqliteDriver {
             statement.execute(StockDao.getTableBuilder().generateQuery());
             statement.execute(StockPriceDao.getTableBuilder().generateQuery());
         } catch (SQLException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             System.out.println("Already exists.. moving on");
         }
     }

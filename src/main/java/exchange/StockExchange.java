@@ -1,4 +1,4 @@
-package external;
+package exchange;
 
 import dao.StockDao;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;

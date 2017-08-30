@@ -10,9 +10,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StockPriceDao implements AbstractDao {
@@ -114,6 +116,7 @@ public class StockPriceDao implements AbstractDao {
         //Remove Everything already added
         stockPrices = stockPrices.stream()
                 .filter(s -> dateFiler.isAfterOrEmpty(s.getSymbol(), s.getDate()))
+                .distinct()
                 .collect(Collectors.toList());
 
         if(stockPrices.size()==0){
@@ -166,4 +169,21 @@ public class StockPriceDao implements AbstractDao {
         return split;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StockPriceDao)) return false;
+
+        StockPriceDao that = (StockPriceDao) o;
+
+        if (!symbol.equals(that.symbol)) return false;
+        return date.equals(that.date);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = symbol.hashCode();
+        result = 31 * result + date.hashCode();
+        return result;
+    }
 }

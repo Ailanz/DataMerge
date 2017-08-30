@@ -14,6 +14,12 @@ public class KeyDateFilter {
         }
     }
 
+    public boolean isAfterOrEmptyAndInsert(String symbol, LocalDate date){
+        boolean ret = isAfterOrEmpty(symbol, date);
+        add(symbol, date);
+        return ret;
+    }
+
 
     public boolean isAfterOrEmpty(String symbol, LocalDate date){
         LocalDate curDate = data.get(symbol);

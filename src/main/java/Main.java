@@ -1,14 +1,11 @@
 import dao.StockDao;
 import db.SqliteDriver;
-import external.GlobalUtil;
-import external.NASDAQ;
-import external.StockExchange;
-import external.TSX;
+import exchange.NASDAQ;
+import exchange.StockExchange;
 import grabber.DailyPriceGrabber;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.List;
@@ -19,7 +16,8 @@ public class Main {
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
 //        File file = new File(GlobalUtil.TSX_FEED);
 //        scrapeData("TSX.txt");
-        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
+//        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
+        scrapeData("otherlisted.txt", NASDAQ.getInstance());
 
         System.out.println("Hello World!");
     }

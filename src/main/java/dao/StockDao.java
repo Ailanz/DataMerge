@@ -1,7 +1,6 @@
 package dao;
 
 import db.TableBuilder;
-import external.StockExchange;
 
 import java.time.LocalDate;
 import java.util.HashMap;
