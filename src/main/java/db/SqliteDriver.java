@@ -21,8 +21,9 @@ public class SqliteDriver {
 
     static {
         try {
+            ClassLoader classloader = Thread.currentThread().getContextClassLoader();
             Class.forName("org.sqlite.JDBC");
-            connection = DriverManager.getConnection(GlobalUtil.jdbcCon);
+            connection = DriverManager.getConnection("jdbc:sqlite:" + classloader.getResource("").getFile() + "stock.sqlite");
             statement = connection.createStatement();
             statement.setQueryTimeout(30);  // set timeout to 30 sec.
             createTables();

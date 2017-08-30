@@ -16,7 +16,7 @@ public class DailyPriceGrabber {
 
         AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.TIME_SERIES_DAILY_ADJUSTED)
-                .withOutputSize(AlphaVantageEnum.OutputSize.FULL)
+                .withOutputSize(AlphaVantageEnum.OutputSize.COMPACT)
                 .withSymbol(stockSymbol);
 
         List<ResultData> data = builder.execute();

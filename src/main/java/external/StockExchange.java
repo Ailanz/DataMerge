@@ -6,13 +6,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.File;
 import java.util.List;
 
-public class StockExchange {
-    static String getExchange(){
-        throw new NotImplementedException();
-    }
+public interface StockExchange {
+    public String getExchange();
 
-    static List<StockDao> parseFeed(File file){
-        throw new NotImplementedException();
-    }
+    public List<StockDao> parseFeed(File file);
 }
 

@@ -10,12 +10,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
-public class TSX extends StockExchange{
-    public static String getExchange(){
+public class TSX implements StockExchange {
+
+    public static StockExchange getInstance(){
+        return new TSX();
+    }
+
+    public String getExchange(){
         return "TSX";
     }
 
-    public static List<StockDao> parseFeed(File file){
+    public List<StockDao> parseFeed(File file){
         List<StockDao> stocks = new LinkedList<>();
         Scanner scan = null;
         try {
@@ -25,10 +30,9 @@ public class TSX extends StockExchange{
         }
         scan.nextLine();
 
-        List<String> symbols = new LinkedList<>();
         while (scan.hasNext()) {
             String symbol = scan.nextLine().split("\t")[0] + ".to";
-            stocks.add(new StockDao(symbol, TSX.getExchange(), LocalDate.now()));
+            stocks.add(new StockDao(symbol, getExchange(), LocalDate.now()));
         }
         return stocks;
     }
