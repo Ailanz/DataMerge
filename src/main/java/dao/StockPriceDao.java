@@ -25,7 +25,6 @@ public class StockPriceDao implements AbstractDao {
     double open;
     double close;
     double adjsutedClose;
-    double dividend;
     double split;
     long volume;
 
@@ -39,7 +38,6 @@ public class StockPriceDao implements AbstractDao {
             .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("ADJUSTED_CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("DIVIDEND", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("SPLIT", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL", "DATE");
@@ -50,7 +48,7 @@ public class StockPriceDao implements AbstractDao {
     }
 
     public StockPriceDao(String symbol, LocalDate date, double high, double low, double open,
-                         double close, double adjsutedClose, long volume, double dividend, double split) {
+                         double close, double adjsutedClose, long volume, double split) {
         this.symbol = symbol;
         this.date = date;
         this.high = high;
@@ -59,7 +57,6 @@ public class StockPriceDao implements AbstractDao {
         this.close = close;
         this.adjsutedClose = adjsutedClose;
         this.volume = volume;
-        this.dividend = dividend;
         this.split = split;
     }
 
@@ -73,7 +70,6 @@ public class StockPriceDao implements AbstractDao {
         map.put("CLOSE", String.valueOf(close));
         map.put("VOLUME", String.valueOf(volume));
         map.put("ADJUSTED_CLOSE", String.valueOf(adjsutedClose));
-        map.put("DIVIDEND", String.valueOf(dividend));
         map.put("SPLIT", String.valueOf(split));
         map.put("DATE", date.toString());
         return map;
@@ -103,7 +99,7 @@ public class StockPriceDao implements AbstractDao {
                 StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"),
                         GlobalUtil.DATE_FORMAT), rs.getDouble("OPEN"), rs.getDouble("HIGH"),
                         rs.getDouble("LOW"), rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"),
-                        rs.getLong("VOLUME"), rs.getDouble("DIVIDEND"), rs.getDouble("SPLIT"));
+                        rs.getLong("VOLUME"), rs.getDouble("SPLIT"));
                 stockPrices.add(sp);
             }
         } catch (SQLException e) {
@@ -161,9 +157,6 @@ public class StockPriceDao implements AbstractDao {
         return adjsutedClose;
     }
 
-    public double getDividend() {
-        return dividend;
-    }
 
     public double getSplit() {
         return split;

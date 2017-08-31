@@ -16,8 +16,8 @@ public class Main {
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
 //        File file = new File(GlobalUtil.TSX_FEED);
 //        scrapeData("TSX.txt");
-//        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
-        scrapeData("otherlisted.txt", NASDAQ.getInstance());
+        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
+//        scrapeData("otherlisted.txt", NASDAQ.getInstance());
 
         System.out.println("Hello World!");
     }
