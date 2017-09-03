@@ -18,7 +18,7 @@ public class PriceUnit {
             }
             return Double.valueOf(lower);
         }catch(Exception e) {
-            System.err.print("cannot parse: " + number);
+//            System.err.print("cannot parse: " + number);
             return -1;
         }
     }

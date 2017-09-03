@@ -4,8 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.StringUtils;
 import util.PriceUnit;
 
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
@@ -40,22 +45,41 @@ public class YahooFinanceBuilder extends UrlHelper {
         return this;
     }
 
-    public List<YahooResult> execute() {
-        List<YahooResult> results = new LinkedList<>();
+    public Map<String, YahooResult> execute() {
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+
+        Map<String, YahooResult> results = new HashMap<>();
         List<List<String>> chunks = chunkTheList(symbols);
+
+        //Thread it!
         chunks.forEach( symList -> {
-            String symbolList = StringUtils.join(symList, ',').replace('[', ' ').replace(']', ' ');
-            JsonNode node = getJsonNode(url.replace("%s", symbolList), 100);
-            node = node.get("query").get("results").get("quote");
-            if (node.size() == symList.size()) {
-                node.forEach(s -> {
-                    results.add(getYahooResult(s));
-                });
-            } else {
-                results.add(getYahooResult(node));
-            }
+            Runnable task = getWork(results, symList);
+            pool.execute(task);
         });
+        pool.shutdown();
+        try {
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return results;
+    }
+
+    private Runnable getWork(Map<String, YahooResult> results, List<String> symList) {
+        return () -> {
+                    String symbolList = StringUtils.join(symList, ',').replace('[', ' ').replace(']', ' ');
+                    JsonNode node = getJsonNode(url.replace("%s", symbolList), 100);
+                    node = node.get("query").get("results").get("quote");
+                    if (symList.size() > 1) {
+                        node.forEach(s -> {
+                            YahooResult r = getYahooResult(s);
+                            results.put(r.getSymbol(), r);
+                        });
+                    } else {
+                        YahooResult r = getYahooResult(node);
+                        results.put(r.getSymbol(), r);
+                    }
+                };
     }
 
     private List<List<String>> chunkTheList(List<String> source){

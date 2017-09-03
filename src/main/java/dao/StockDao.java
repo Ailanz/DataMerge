@@ -57,6 +57,9 @@ public class StockDao implements AbstractDao{
     }
 
     public void setResult(YahooResult r){
+        if(r==null){
+            return;
+        }
         this.spread = r.getSpread();
         this.dividendShare = r.getDividendShare();
         this.dividendYield = r.getDividendYield();
