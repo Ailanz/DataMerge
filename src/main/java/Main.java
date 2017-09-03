@@ -2,6 +2,7 @@ import dao.StockDao;
 import db.SqliteDriver;
 import exchange.NASDAQ;
 import exchange.StockExchange;
+import exchange.TSX;
 import grabber.DailyPriceGrabber;
 
 import java.io.File;
@@ -15,9 +16,9 @@ public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
 //        File file = new File(GlobalUtil.TSX_FEED);
-//        scrapeData("TSX.txt");
+        scrapeData("TSX.txt", TSX.getInstance());
         scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
-//        scrapeData("otherlisted.txt", NASDAQ.getInstance());
+        scrapeData("otherlisted.txt", NASDAQ.getInstance());
 
         System.out.println("Hello World!");
     }
@@ -27,7 +28,7 @@ public class Main {
         File file = new File(classloader.getResource(textFile).getFile());
         List<StockDao> stocks = exchange.parseFeed(file);
         List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
-        DailyPriceGrabber.populateStockPrices(stockSymbols);
+//        DailyPriceGrabber.populateStockPrices(stockSymbols);
         SqliteDriver.insertStockSymbols(stockSymbols, exchange.getExchange());
     }
 

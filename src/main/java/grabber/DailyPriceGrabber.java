@@ -1,8 +1,7 @@
 package grabber;
 
 import dao.StockPriceDao;
-import db.SqliteDriver;
-import external.GlobalUtil;
+import util.GlobalUtil;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -29,7 +28,7 @@ public class DailyPriceGrabber {
         for (ResultData r : data) {
             ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
                     r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. adjusted close").asDouble(),
-                    r.getData().get("6. volume").asLong(),  r.getData().get("8. split coefficient").asDouble()));
+                    r.getData().get("6. volume").asLong()));
         }
 
         return ret;

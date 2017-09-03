@@ -3,18 +3,16 @@ package dao;
 import db.InsertionBuilder;
 import db.SqliteDriver;
 import db.TableBuilder;
-import external.GlobalUtil;
-import external.KeyDateFilter;
+import util.GlobalUtil;
+import util.KeyDateFilter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StockPriceDao implements AbstractDao {
@@ -25,7 +23,6 @@ public class StockPriceDao implements AbstractDao {
     double open;
     double close;
     double adjsutedClose;
-    double split;
     long volume;
 
     static KeyDateFilter dateFiler = new KeyDateFilter();
@@ -38,7 +35,6 @@ public class StockPriceDao implements AbstractDao {
             .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("ADJUSTED_CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
-            .withColumn("SPLIT", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL", "DATE");
 
@@ -48,7 +44,7 @@ public class StockPriceDao implements AbstractDao {
     }
 
     public StockPriceDao(String symbol, LocalDate date, double high, double low, double open,
-                         double close, double adjsutedClose, long volume, double split) {
+                         double close, double adjsutedClose, long volume) {
         this.symbol = symbol;
         this.date = date;
         this.high = high;
@@ -57,7 +53,6 @@ public class StockPriceDao implements AbstractDao {
         this.close = close;
         this.adjsutedClose = adjsutedClose;
         this.volume = volume;
-        this.split = split;
     }
 
     @Override
@@ -70,7 +65,6 @@ public class StockPriceDao implements AbstractDao {
         map.put("CLOSE", String.valueOf(close));
         map.put("VOLUME", String.valueOf(volume));
         map.put("ADJUSTED_CLOSE", String.valueOf(adjsutedClose));
-        map.put("SPLIT", String.valueOf(split));
         map.put("DATE", date.toString());
         return map;
     }
@@ -99,7 +93,7 @@ public class StockPriceDao implements AbstractDao {
                 StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"),
                         GlobalUtil.DATE_FORMAT), rs.getDouble("OPEN"), rs.getDouble("HIGH"),
                         rs.getDouble("LOW"), rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"),
-                        rs.getLong("VOLUME"), rs.getDouble("SPLIT"));
+                        rs.getLong("VOLUME"));
                 stockPrices.add(sp);
             }
         } catch (SQLException e) {
@@ -110,12 +104,17 @@ public class StockPriceDao implements AbstractDao {
 
     public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
         //Remove Everything already added
+        if(stockPrices.size()==0) {
+            System.err.print("Empty Stock Prices!");
+        }
+        String name = stockPrices.get(0).getSymbol();
         stockPrices = stockPrices.stream()
                 .filter(s -> dateFiler.isAfterOrEmpty(s.getSymbol(), s.getDate()))
                 .distinct()
                 .collect(Collectors.toList());
 
         if(stockPrices.size()==0){
+            System.out.println("Already esists, Skipping: " + name);
             return;
         }
 
@@ -157,10 +156,6 @@ public class StockPriceDao implements AbstractDao {
         return adjsutedClose;
     }
 
-
-    public double getSplit() {
-        return split;
-    }
 
     @Override
     public boolean equals(Object o) {

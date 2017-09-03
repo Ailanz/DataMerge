@@ -60,7 +60,7 @@ public class InsertionBuilder {
 
     public String execute() {
         StringBuilder sb = new StringBuilder();
-        sb.append("insert into " + tableBuilder.getTableName() + " (");
+        sb.append("insert or replace into " + tableBuilder.getTableName() + " (");
         sb.append(StringUtils.join(columnNames.stream().map( s-> s.getKey()).toArray(), ',').replace('[', ' ').replace(']', ' ') + ") values ");
         params.forEach(p -> {
             sb.append('(');
