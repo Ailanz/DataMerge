@@ -1,8 +1,7 @@
 package grabber;
 
 import dao.StockPriceDao;
-import db.SqliteDriver;
-import external.GlobalUtil;
+import util.GlobalUtil;
 
 import java.util.LinkedList;
 import java.util.List;

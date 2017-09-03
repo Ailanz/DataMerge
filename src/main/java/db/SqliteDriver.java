@@ -2,6 +2,8 @@ package db;
 
 import dao.StockDao;
 import dao.StockPriceDao;
+import grabber.YahooFinanceBuilder;
+import grabber.YahooResult;
 
 import java.sql.*;
 import java.time.LocalDate;
@@ -51,7 +53,14 @@ public class SqliteDriver {
         LocalDate now = LocalDate.now();
         InsertionBuilder builder = InsertionBuilder.aBuilder()
                 .withTableBuilder(StockDao.getTableBuilder());
-        symbols.stream().forEach(s -> builder.withParams(new StockDao(s, exchange, now).getParams()));
+
+        List<YahooResult> results = YahooFinanceBuilder.getInstance().withSymbols(symbols).execute();
+
+        symbols.stream().forEach(s -> {
+            StockDao sd = new StockDao(s, exchange, now);
+//            sd.setResult(YahooFinanceBuilder.execute(s));
+            builder.withParams(sd.getParams());
+        });
         executeInsert(builder.execute());
     }
 

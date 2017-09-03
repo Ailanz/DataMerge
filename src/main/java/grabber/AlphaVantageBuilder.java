@@ -15,12 +15,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-public class AlphaVantageBuilder {
+public class AlphaVantageBuilder extends UrlHelper {
 
     static String baseUrl = "https://www.alphavantage.co/query?";
     static String apikey = "apikey=72OFKJ7KN7414UCF";
-
-    static final ObjectMapper mapper = new ObjectMapper();
 
     private List<Pair<String, String>> params = new LinkedList<>();
 
@@ -76,10 +74,10 @@ public class AlphaVantageBuilder {
         sb.append(baseUrl);
         params.forEach(s -> sb.append(s.getKey() + "=" + s.getValue() + "&"));
         sb.append(apikey);
-        return getResult(sb.toString());
+        return getResult(sb.toString(), 3);
     }
 
-    private static List<ResultData> getResult(String targetUrl) {
+    private static List<ResultData> getResult(String targetUrl, int retry) {
         JsonNode node = getJsonNode(targetUrl);
         if (node == null) {
             return null;
@@ -92,8 +90,17 @@ public class AlphaVantageBuilder {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         if (list.size() == 1) {
-            System.out.println("Cannot parse results: " + targetUrl);
-            return null;
+            if(retry > 0) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return getResult(targetUrl, retry - 1);
+            }else {
+                System.out.println("Cannot parse results: " + targetUrl);
+                return null;
+            }
         }
 
         try {
@@ -111,31 +118,6 @@ public class AlphaVantageBuilder {
         }
 
         return ret;
-    }
-
-    private static JsonNode getJsonNode(String url) {
-        URL jsonUrl = null;
-        try {
-            jsonUrl = new URL(url);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-
-
-        for (int i = 0; i < 3; i++) {  //retry = 3
-            try {
-                JsonNode node = mapper.readValue(jsonUrl, JsonNode.class);
-                if (node.size() != 0) {
-                    return node;
-                }
-            } catch (IOException e) {
-                System.err.println("Retrying... " + jsonUrl.toString());
-            }
-        }
-
-        System.err.println("Giving Up... " + jsonUrl.toString());
-
-        return null;
     }
 
 }

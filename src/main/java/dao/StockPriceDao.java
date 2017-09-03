@@ -3,18 +3,16 @@ package dao;
 import db.InsertionBuilder;
 import db.SqliteDriver;
 import db.TableBuilder;
-import external.GlobalUtil;
-import external.KeyDateFilter;
+import util.GlobalUtil;
+import util.KeyDateFilter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class StockPriceDao implements AbstractDao {
@@ -110,12 +108,17 @@ public class StockPriceDao implements AbstractDao {
 
     public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
         //Remove Everything already added
+        if(stockPrices.size()==0) {
+            System.err.print("Empty Stock Prices!");
+        }
+        String name = stockPrices.get(0).getSymbol();
         stockPrices = stockPrices.stream()
                 .filter(s -> dateFiler.isAfterOrEmpty(s.getSymbol(), s.getDate()))
                 .distinct()
                 .collect(Collectors.toList());
 
         if(stockPrices.size()==0){
+            System.out.println("Already esists, Skipping: " + name);
             return;
         }
 
