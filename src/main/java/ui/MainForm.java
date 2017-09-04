@@ -9,13 +9,11 @@ import org.jfree.chart.axis.SegmentedTimeline;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.CandlestickRenderer;
-import org.jfree.data.xy.DefaultHighLowDataset;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.util.List;
 
@@ -50,12 +48,23 @@ public class MainForm extends JPanel {
         NumberAxis rangeAxis = new NumberAxis("Price");
         CandlestickRenderer renderer = new CandlestickRenderer();
 
-//        renderer.setSeriesPaint(0, Color.BLACK);
-//        renderer.setDrawVolume(false);
         rangeAxis.setAutoRangeIncludesZero(false);
         domainAxis.setTimeline(SegmentedTimeline.newMondayThroughFridayTimeline());
 
         XYPlot mainPlot = new XYPlot(dataset, domainAxis, rangeAxis, renderer);
+
+        XYLineAndShapeRenderer lineRender = new XYLineAndShapeRenderer();
+        lineRender.setShapesVisible(false);
+        //moving average 1
+        XYDataset ma = StockPriceDataSet.simpleMovingAverage(symbol, 50);
+        mainPlot.setDataset(1, ma);
+        mainPlot.setRenderer(1, lineRender);
+
+        //moving average 2
+        XYDataset ma2 = StockPriceDataSet.simpleMovingAverage(symbol, 70);
+        mainPlot.setDataset(2, ma2);
+        mainPlot.setRenderer(2, lineRender);
+
         JFreeChart chart = new JFreeChart(symbol + " - " + stock.getName(), null, mainPlot, false);
         chart.getXYPlot().setOrientation(PlotOrientation.VERTICAL);
         return chart;
