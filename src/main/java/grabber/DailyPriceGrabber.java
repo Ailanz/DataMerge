@@ -26,8 +26,8 @@ public class DailyPriceGrabber {
 
         List<StockPriceDao> ret = new LinkedList<>();
         for (ResultData r : data) {
-            ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("1. open").asDouble(), r.getData().get("2. high").asDouble(),
-                    r.getData().get("3. low").asDouble(), r.getData().get("4. close").asDouble(), r.getData().get("5. adjusted close").asDouble(),
+            ret.add(new StockPriceDao(stockSymbol, r.getDate(), r.getData().get("2. high").asDouble(), r.getData().get("3. low").asDouble(), r.getData().get("1. open").asDouble()
+                    , r.getData().get("4. close").asDouble(), r.getData().get("5. adjusted close").asDouble(),
                     r.getData().get("6. volume").asLong()));
         }
 
@@ -44,7 +44,7 @@ public class DailyPriceGrabber {
                 final long startTime = System.currentTimeMillis();
 
                 List<StockPriceDao> prices = DailyPriceGrabber.getStockPrices(sym);
-                if (prices == null) {
+                if (prices == null || prices.size()==0) {
                     invalidSymbols.add(sym);
                     System.out.println("Missing: " + sym);
                 } else {

@@ -4,8 +4,12 @@ package util;
  * Created by Ailan on 9/2/2017.
  */
 public class PriceUnit {
-    private static double MILLION = 1000000;
-    private static double BILLION = 1000000000;
+    public static double MILLION = 1000000;
+    public static double BILLION = 1000000000;
+
+    public static double toDouble(double num, double unit){
+        return num * unit;
+    }
 
     public static double parseNumber(String number){
         try {

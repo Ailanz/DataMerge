@@ -25,7 +25,7 @@ public class StockPriceDao implements AbstractDao {
     double adjsutedClose;
     long volume;
 
-    static KeyDateFilter dateFiler = new KeyDateFilter();
+    static KeyDateFilter dateFiler;
 
     private static TableBuilder stockPriceTableBuilder = TableBuilder.aBuilder().withTableName("StockPrice")
             .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
@@ -37,11 +37,6 @@ public class StockPriceDao implements AbstractDao {
             .withColumn("ADJUSTED_CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL", "DATE");
-
-    static{
-        List<StockPriceDao> allPrices = getAllStockPrices();
-        allPrices.stream().forEach(s->dateFiler.add(s.getSymbol(), s.getDate()));
-    }
 
     public StockPriceDao(String symbol, LocalDate date, double high, double low, double open,
                          double close, double adjsutedClose, long volume) {
@@ -74,14 +69,14 @@ public class StockPriceDao implements AbstractDao {
     }
 
     public static List<StockPriceDao> getAllStockPrices(String symbol) {
-        String query = String.format("select * from stockprice where symbol = '%s'", symbol);
+        String query = String.format("select * from stockprice where symbol = '%s' order by DATE desc", symbol);
         List<StockPriceDao> stockPrices = new LinkedList<>();
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStockPrice(rs);
     }
 
     public static List<StockPriceDao> getAllStockPrices() {
-        String query = "select * from stockprice";
+        String query = "select * from stockprice order by DATE desc";
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStockPrice(rs);
     }
@@ -90,10 +85,9 @@ public class StockPriceDao implements AbstractDao {
         List<StockPriceDao> stockPrices = new LinkedList<>();
         try {
             while (rs.next()) {
-                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"),
-                        GlobalUtil.DATE_FORMAT), rs.getDouble("OPEN"), rs.getDouble("HIGH"),
-                        rs.getDouble("LOW"), rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"),
-                        rs.getLong("VOLUME"));
+                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), GlobalUtil.DATE_FORMAT),
+                        rs.getDouble("HIGH"), rs.getDouble("LOW"), rs.getDouble("OPEN"),
+                        rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"), rs.getLong("VOLUME"));
                 stockPrices.add(sp);
             }
         } catch (SQLException e) {
@@ -107,6 +101,14 @@ public class StockPriceDao implements AbstractDao {
         if(stockPrices.size()==0) {
             System.err.print("Empty Stock Prices!");
         }
+
+        //Lazy load
+        if(dateFiler==null){
+            dateFiler = new KeyDateFilter();
+            List<StockPriceDao> allPrices = getAllStockPrices();
+            allPrices.stream().forEach(s->dateFiler.add(s.getSymbol(), s.getDate()));
+        }
+
         String name = stockPrices.get(0).getSymbol();
         stockPrices = stockPrices.stream()
                 .filter(s -> dateFiler.isAfterOrEmpty(s.getSymbol(), s.getDate()))

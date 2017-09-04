@@ -28,7 +28,7 @@ public class Main {
         File file = new File(classloader.getResource(textFile).getFile());
         List<StockDao> stocks = exchange.parseFeed(file);
         List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
-//        DailyPriceGrabber.populateStockPrices(stockSymbols);
+        DailyPriceGrabber.populateStockPrices(stockSymbols);
         SqliteDriver.insertStockSymbols(stockSymbols, exchange.getExchange());
     }
 

@@ -2,6 +2,7 @@ package grabber;
 
 public class YahooResult {
     String symbol;
+    String name;
     double spread;
     double dividendShare;
     double dividendYield;
@@ -13,14 +14,14 @@ public class YahooResult {
     double peRatio;
     double yearTargetPrice;
 
-    public YahooResult(String symbol, double spread, double dividendShare, double dividendYield, double earningsShare,
+    public YahooResult(String symbol, String name, double spread, double dividendShare, double dividendYield, double earningsShare,
                        double epseEstimateCurrentYear, double epseEseEstimateNextYear, double marketCap, double ebitada,
                        double peRatio, double yearTargetPrice) {
         this.symbol = symbol;
+        this.name = name;
         this.spread = spread;
         this.dividendShare = dividendShare;
         this.dividendYield = dividendYield;
-
         this.earningsShare = earningsShare;
         this.epseEstimateCurrentYear = epseEstimateCurrentYear;
         this.epseEseEstimateNextYear = epseEseEstimateNextYear;
@@ -32,6 +33,10 @@ public class YahooResult {
 
     public String getSymbol() {
         return symbol;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public double getSpread() {

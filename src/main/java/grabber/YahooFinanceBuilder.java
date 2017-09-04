@@ -99,6 +99,7 @@ public class YahooFinanceBuilder extends UrlHelper {
 
     private static YahooResult getYahooResult(JsonNode s) {
         String symbol = s.get("symbol").asText();
+        String name = s.get("Name").asText();
         double ask = PriceUnit.parseNumber(s.get("Ask").asText());
         double bid = PriceUnit.parseNumber(s.get("Bid").asText());
         double dividendShare = PriceUnit.parseNumber(s.get("DividendShare").asText());
@@ -111,7 +112,7 @@ public class YahooFinanceBuilder extends UrlHelper {
         double peRatio = PriceUnit.parseNumber(s.get("PERatio").asText());
         double yearTargetPrice = PriceUnit.parseNumber(s.get("OneyrTargetPrice").asText());
         double spread = (ask == -1 || bid == -1) ? -1 : Math.round((ask - bid) * 100.0) / 100.0;
-        return new YahooResult(symbol, spread, dividendShare, dividendYield, earningsShare,
+        return new YahooResult(symbol, name, spread, dividendShare, dividendYield, earningsShare,
                 epseEstimateCurrentYear, epseEseEstimateNextYear, marketCap, ebitada, peRatio, yearTargetPrice);
     }
 
