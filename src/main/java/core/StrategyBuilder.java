@@ -31,7 +31,7 @@ public class StrategyBuilder {
                 .withTimeRange(new TimeRange(LocalDate.now().minusDays(400), LocalDate.now()))
                 .withBuyAfterDate(LocalDate.now().minusDays(200))
                 .withMovingAverages(s,l)
-                .execute(StockDao.getStock("YUMC"));
+                .execute(StockDao.getStock("ABCB"));
         System.out.println(transactions);
     }
 
@@ -69,6 +69,7 @@ public class StrategyBuilder {
 
         prices = prices.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
 
+        double spread = 0;
         Boolean isShortOverLong = null;
         boolean holdingStock = false;
         double holdingPrice = 0;
@@ -88,13 +89,13 @@ public class StrategyBuilder {
                 }
 
                 if(holdingStock && price <= holdingPrice*(1-maxLossPercent)){
-                    records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), stock.getSymbol(), price - stock.getSpread()));
+                    records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), stock.getSymbol(), price - spread));
                     holdingStock = false;
                 }
 
                 if(!isShortOverLong && shortAvg > longAvg) {
                     if(!holdingStock) {
-                        records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), stock.getSymbol(), price + stock.getSpread()));
+                        records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), stock.getSymbol(), price + spread));
                         holdingPrice = price;
                         holdingStock = true;
                     }
@@ -103,7 +104,7 @@ public class StrategyBuilder {
 
                 if(isShortOverLong && longAvg > shortAvg){
                     if(holdingStock && holdingPrice < price) {
-                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), stock.getSymbol(), price - stock.getSpread()));
+                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), stock.getSymbol(), price - spread));
                         holdingStock = false;
                     }
                     isShortOverLong = false;

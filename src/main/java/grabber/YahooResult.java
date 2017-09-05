@@ -40,6 +40,9 @@ public class YahooResult {
     }
 
     public double getSpread() {
+        if(spread<0) {
+            return 0;
+        }
         return spread;
     }
 

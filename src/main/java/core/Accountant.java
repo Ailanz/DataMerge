@@ -27,11 +27,11 @@ public class Accountant {
 
         int count = 0;
         for(StockDao stock : allStocks) {
-            MovingAverage s = new MovingAverage(12);
-            MovingAverage l = new MovingAverage(24);
+            MovingAverage s = new ExponentialMovingAverage(12);
+            MovingAverage l = new ExponentialMovingAverage(24);
             List<TransactionRecord> transactions = StrategyBuilder.aBuilder()
                     .withTimeRange(new TimeRange(LocalDate.now().minusDays(400), LocalDate.now()))
-                    .withBuyAfterDate(LocalDate.now().minusDays(200))
+                    .withBuyAfterDate(LocalDate.now().minusDays(100))
                     .withMovingAverages(s, l)
                     .execute(StockDao.getStock(stock.getSymbol()));
             Accountant acct = new Accountant();

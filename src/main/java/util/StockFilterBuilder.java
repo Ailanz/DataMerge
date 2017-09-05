@@ -5,6 +5,7 @@ import dao.StockPriceDao;
 import exchange.StockExchange;
 import ui.StockFilter;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,6 +50,7 @@ public class StockFilterBuilder {
                 .filter(s->s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
                 .filter(s-> stockExchange==null ? true : s.getExchange().equals(stockExchange.getExchange()))
                 .filter(s-> filterAverageVolume(s))
+                .filter(s->s.getLatestPrice().getDate().isAfter(LocalDate.now().minusDays(7)))
                 .collect(Collectors.toList());
 
     }
