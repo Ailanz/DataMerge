@@ -1,21 +1,12 @@
 package algo;
 
-import dao.StockPriceDao;
-import org.jfree.data.xy.DefaultOHLCDataset;
-import org.jfree.data.xy.OHLCDataItem;
-
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
 /**
  * Created by Ailan on 9/4/2017.
  */
 public class MovingAverage {
 
-    private int size;
-    private double total = 0d;
+    protected int interval;
+    protected double total = 0d;
     private int index = 0;
     private double samples[];
 
@@ -32,21 +23,21 @@ public class MovingAverage {
         }
     }
 
-    public MovingAverage(int size) {
-        this.size = size;
-        samples = new double[size];
-        for (int i = 0; i < size; i++) samples[i] = 0d;
+    public MovingAverage(int interval) {
+        this.interval = interval;
+        samples = new double[interval];
+        for (int i = 0; i < interval; i++) samples[i] = 0d;
     }
 
     public void add(double x) {
         total -= samples[index];
         samples[index] = x;
         total += x;
-        if (++index == size) index = 0; // cheaper than modulus
+        if (++index == interval) index = 0; // cheaper than modulus
     }
 
     public double getAverage() {
-        return total / size;
+        return total / interval;
     }
 
     public static double[] getSimpleAverage(double[] prices){

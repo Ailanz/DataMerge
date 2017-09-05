@@ -1,6 +1,9 @@
 package util;
 
 import dao.StockDao;
+import dao.StockPriceDao;
+import exchange.StockExchange;
+import ui.StockFilter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,6 +15,8 @@ public class StockFilterBuilder {
 
     private double maxMarketCap = Double.MAX_VALUE;
     private double minMarketCap = 0;
+    private double averageVolume = 0;
+    private StockExchange stockExchange = null;
 
     private StockFilterBuilder() {}
 
@@ -29,8 +34,31 @@ public class StockFilterBuilder {
         return this;
     }
 
+    public StockFilterBuilder withAverageVolumeOver(double volume){
+        this.averageVolume = volume;
+        return this;
+    }
+
+    public StockFilterBuilder withStockExchange(StockExchange exchange){
+        this.stockExchange = exchange;
+        return this;
+    }
+
     public List<StockDao> execute(List<StockDao> stocks){
-        return stocks.stream().filter(s->s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap).collect(Collectors.toList());
+        return stocks.stream()
+                .filter(s->s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
+                .filter(s-> stockExchange==null ? true : s.getExchange().equals(stockExchange.getExchange()))
+                .filter(s-> filterAverageVolume(s))
+                .collect(Collectors.toList());
+
+    }
+
+    private boolean filterAverageVolume(StockDao s) {
+        if(averageVolume ==0) {
+            return true;
+        }
+        List<StockPriceDao> prices = s.getPrices();
+        return (prices.stream().mapToLong(sa->sa.getVolume()).sum()/prices.size()) > averageVolume;
     }
 
 }

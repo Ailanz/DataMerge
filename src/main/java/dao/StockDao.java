@@ -29,6 +29,7 @@ public class StockDao implements AbstractDao {
     double peRatio;
 
     double yearTargetPrice;
+    private List<StockPriceDao> cachedPrices = null;
 
     static TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
             .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
@@ -161,7 +162,12 @@ public class StockDao implements AbstractDao {
     }
 
     public List<StockPriceDao> getPrices(){
-        return StockPriceDao.getAllStockPrices(this.symbol);
+        return this.cachedPrices == null ? StockPriceDao.getAllStockPrices(this.symbol) : this.cachedPrices;
+    }
+
+    public StockPriceDao getLatestPrice(){
+        List<StockPriceDao> prices = getPrices();
+        return prices.get(0);
     }
 
     public double getSpread() {

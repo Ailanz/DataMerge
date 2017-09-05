@@ -53,21 +53,22 @@ public class MainForm extends JPanel {
 
         XYPlot mainPlot = new XYPlot(dataset, domainAxis, rangeAxis, renderer);
 
-        XYLineAndShapeRenderer lineRender = new XYLineAndShapeRenderer();
-        lineRender.setShapesVisible(false);
-        //moving average 1
-        XYDataset ma = StockPriceDataSet.simpleMovingAverage(symbol, 50);
-        mainPlot.setDataset(1, ma);
-        mainPlot.setRenderer(1, lineRender);
-
-        //moving average 2
-        XYDataset ma2 = StockPriceDataSet.simpleMovingAverage(symbol, 70);
-        mainPlot.setDataset(2, ma2);
-        mainPlot.setRenderer(2, lineRender);
+        //moving average
+        addMovingAverage(symbol, mainPlot, 12, 1);
+        addMovingAverage(symbol, mainPlot, 24, 2);
 
         JFreeChart chart = new JFreeChart(symbol + " - " + stock.getName(), null, mainPlot, false);
         chart.getXYPlot().setOrientation(PlotOrientation.VERTICAL);
         return chart;
+    }
+
+    private void addMovingAverage(String symbol, XYPlot mainPlot, int interval, int index) {
+        XYLineAndShapeRenderer lineRender = new XYLineAndShapeRenderer();
+        lineRender.setShapesVisible(false);
+        XYDataset ma = StockPriceDataSet.simpleMovingAverage(symbol, interval);
+        mainPlot.setDataset(index, ma);
+        mainPlot.setRenderer(index, lineRender);
+//        mainPlot.set
     }
 
     private JScrollPane constructStockList() {

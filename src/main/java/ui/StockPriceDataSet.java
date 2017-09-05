@@ -1,5 +1,6 @@
 package ui;
 
+import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
 import dao.StockPriceDao;
 import org.jfree.data.xy.*;
@@ -36,7 +37,7 @@ public class StockPriceDataSet {
     }
 
     public static AbstractXYDataset simpleMovingAverage(String symbol, int interval){
-        MovingAverage mv = new MovingAverage(interval);
+        MovingAverage mv = new ExponentialMovingAverage(interval);
         List<OHLCDataItem> dataItems = new ArrayList<>();
         List<StockPriceDao> sp = StockPriceDao.getAllStockPrices(symbol);
         sp.stream().limit(100 + interval).sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).forEach(s->{
