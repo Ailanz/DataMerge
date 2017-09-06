@@ -3,9 +3,8 @@ package util;
 import dao.StockDao;
 import dao.StockPriceDao;
 import exchange.StockExchange;
-import ui.StockFilter;
+import org.joda.time.DateTime;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,48 +18,49 @@ public class StockFilterBuilder {
     private double averageVolume = 0;
     private StockExchange stockExchange = null;
 
-    private StockFilterBuilder() {}
+    private StockFilterBuilder() {
+    }
 
-    public static StockFilterBuilder getInstance(){
+    public static StockFilterBuilder getInstance() {
         return new StockFilterBuilder();
     }
 
-    public StockFilterBuilder withMaxMarketCap(double max){
+    public StockFilterBuilder withMaxMarketCap(double max) {
         this.maxMarketCap = max;
         return this;
     }
 
-    public StockFilterBuilder withMinMarketCap(double min){
+    public StockFilterBuilder withMinMarketCap(double min) {
         this.minMarketCap = min;
         return this;
     }
 
-    public StockFilterBuilder withAverageVolumeOver(double volume){
+    public StockFilterBuilder withAverageVolumeOver(double volume) {
         this.averageVolume = volume;
         return this;
     }
 
-    public StockFilterBuilder withStockExchange(StockExchange exchange){
+    public StockFilterBuilder withStockExchange(StockExchange exchange) {
         this.stockExchange = exchange;
         return this;
     }
 
-    public List<StockDao> execute(List<StockDao> stocks){
+    public List<StockDao> execute(List<StockDao> stocks) {
         return stocks.stream()
-                .filter(s->s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
-                .filter(s-> stockExchange==null ? true : s.getExchange().equals(stockExchange.getExchange()))
-                .filter(s-> filterAverageVolume(s))
-                .filter(s->s.getLatestPrice().getDate().isAfter(LocalDate.now().minusDays(7)))
+                .filter(s -> s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
+                .filter(s -> stockExchange == null ? true : s.getExchange().equals(stockExchange.getExchange()))
+                .filter(s -> filterAverageVolume(s))
+                .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(7)))
                 .collect(Collectors.toList());
 
     }
 
     private boolean filterAverageVolume(StockDao s) {
-        if(averageVolume ==0) {
+        if (averageVolume == 0) {
             return true;
         }
         List<StockPriceDao> prices = s.getPrices();
-        return (prices.stream().mapToLong(sa->sa.getVolume()).sum()/prices.size()) > averageVolume;
+        return (prices.stream().mapToLong(sa -> sa.getVolume()).sum() / prices.size()) > averageVolume;
     }
 
 }

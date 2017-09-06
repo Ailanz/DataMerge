@@ -18,7 +18,7 @@ public class InsertionBuilder {
     private InsertionBuilder() {
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         TableBuilder stockPriceTableBuilder = TableBuilder.aBuilder().withTableName("StockPrice")
                 .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
                 .withColumn("HIGH", TableBuilder.FIELD_TYPE.NUMERIC)
@@ -61,7 +61,7 @@ public class InsertionBuilder {
     public String execute() {
         StringBuilder sb = new StringBuilder();
         sb.append("insert or replace into " + tableBuilder.getTableName() + " (");
-        sb.append(StringUtils.join(columnNames.stream().map( s-> s.getKey()).toArray(), ',').replace('[', ' ').replace(']', ' ') + ") values ");
+        sb.append(StringUtils.join(columnNames.stream().map(s -> s.getKey()).toArray(), ',').replace('[', ' ').replace(']', ' ') + ") values ");
         params.forEach(p -> {
             sb.append('(');
             columnNames.forEach(s -> {
@@ -72,10 +72,10 @@ public class InsertionBuilder {
                 }
                 sb.append(',');
             });
-            sb.deleteCharAt(sb.length()-1);
+            sb.deleteCharAt(sb.length() - 1);
             sb.append(')').append(',');
         });
-        sb.deleteCharAt(sb.length()-1);
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 

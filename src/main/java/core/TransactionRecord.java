@@ -13,12 +13,14 @@ public class TransactionRecord {
     private DateTime date;
 
     private double price;
+
     private TransactionRecord(Type type, String symbol, DateTime date, double price) {
         this.symbol = symbol;
         this.type = type;
         this.date = date;
         this.price = price;
     }
+
     public static TransactionRecord buy(DateTime date, String symbol, double price) {
         return new TransactionRecord(Type.BUY, symbol, date, price);
     }

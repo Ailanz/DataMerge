@@ -1,14 +1,9 @@
 package grabber;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import org.apache.commons.lang3.tuple.Pair;
+import org.joda.time.DateTime;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,7 +17,7 @@ public class AlphaVantageBuilder extends UrlHelper {
 
     private List<Pair<String, String>> params = new LinkedList<>();
 
-    static{
+    static {
         System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
         System.setProperty("sun.net.client.defaultReadTimeout", "30000");
     }
@@ -64,6 +59,11 @@ public class AlphaVantageBuilder extends UrlHelper {
         return this;
     }
 
+    public AlphaVantageBuilder withSeriesType(AlphaVantageEnum.SeriesType seriesType) {
+        params.add(Pair.of("series_type", seriesType.name().toLowerCase()));
+        return this;
+    }
+
     public AlphaVantageBuilder withTimePeriod(int period) {
         params.add(Pair.of("time_period", String.valueOf(period)));
         return this;
@@ -85,33 +85,33 @@ public class AlphaVantageBuilder extends UrlHelper {
 
         List<JsonNode> list = new ArrayList();
         node.elements().forEachRemaining(list::add);
-        List<Pair<LocalDate, JsonNode>> dates = new ArrayList();
+        List<Pair<DateTime, JsonNode>> dates = new ArrayList();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         if (list.size() == 1) {
-            if(retry > 0) {
+            if (retry > 0) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 return getResult(targetUrl, retry - 1);
-            }else {
+            } else {
                 System.out.println("Cannot parse results: " + targetUrl);
                 return null;
             }
         }
 
         try {
-            list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(LocalDate.parse(s.getKey().split(" ")[0], formatter), s.getValue())));
+            list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(DateTime.parse(s.getKey().split(" ")[0]), s.getValue())));
         } catch (Exception e) {
             System.err.println("Error: " + targetUrl);
         }
 
         dates.remove(0);   //exclude current incomplete data
         List<ResultData> ret = new LinkedList<>();
-        for (Pair<LocalDate, JsonNode> p : dates) {
+        for (Pair<DateTime, JsonNode> p : dates) {
             HashMap<String, JsonNode> data = new HashMap<>();
             p.getRight().fields().forEachRemaining(s -> data.put(s.getKey(), s.getValue()));
             ret.add(new ResultData(p.getLeft(), data));
@@ -123,15 +123,15 @@ public class AlphaVantageBuilder extends UrlHelper {
 }
 
 class ResultData {
-    private LocalDate date;
+    private DateTime date;
     private HashMap<String, JsonNode> data;
 
-    public ResultData(LocalDate date, HashMap<String, JsonNode> data) {
+    public ResultData(DateTime date, HashMap<String, JsonNode> data) {
         this.date = date;
         this.data = data;
     }
 
-    public LocalDate getDate() {
+    public DateTime getDate() {
         return date;
     }
 

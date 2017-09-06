@@ -44,7 +44,7 @@ public class DailyPriceGrabber {
                 final long startTime = System.currentTimeMillis();
 
                 List<StockPriceDao> prices = DailyPriceGrabber.getStockPrices(sym);
-                if (prices == null || prices.size()==0) {
+                if (prices == null || prices.size() == 0) {
                     invalidSymbols.add(sym);
                     System.out.println("Missing: " + sym);
                 } else {

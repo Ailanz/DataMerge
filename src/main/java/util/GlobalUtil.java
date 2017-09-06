@@ -10,9 +10,9 @@ public class GlobalUtil {
     public static String TSX_FEED = "/var/tmp/TSX.txt";
 //    public static String TSX_FEED = "D:\\data\\TSX.txt";
 
-    public static double getMemoryConsumption(){
+    public static double getMemoryConsumption() {
         long totalmem = java.lang.Runtime.getRuntime().totalMemory();
-        long freemem  = java.lang.Runtime.getRuntime().freeMemory();
+        long freemem = java.lang.Runtime.getRuntime().freeMemory();
         return Math.round((totalmem - freemem) / 1000000.0);
     }
 }

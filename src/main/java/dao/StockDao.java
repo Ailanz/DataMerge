@@ -3,11 +3,10 @@ package dao;
 import db.SqliteDriver;
 import db.TableBuilder;
 import grabber.YahooResult;
-import util.GlobalUtil;
+import org.joda.time.DateTime;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +16,7 @@ public class StockDao implements AbstractDao {
     String symbol;
     String name;
     String exchange;
-    LocalDate updated;
+    DateTime updated;
     double spread;
     double dividendShare;
     double dividendYield;
@@ -48,13 +47,13 @@ public class StockDao implements AbstractDao {
             .withColumn("UPDATED", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL");
 
-    public StockDao(String symbol, String exchange, LocalDate updated) {
+    public StockDao(String symbol, String exchange, DateTime updated) {
         this.symbol = symbol;
         this.exchange = exchange;
         this.updated = updated;
     }
 
-    public StockDao(String symbol, String name, String exchange, LocalDate updated, double spread, double dividendShare,
+    public StockDao(String symbol, String name, String exchange, DateTime updated, double spread, double dividendShare,
                     double dividendYield, double earningsShare, double epseEstimateCurrentYear,
                     double epseEseEstimateNextYear, double marketCap, double ebitada, double peRatio,
                     double yearTargetPrice) {
@@ -86,13 +85,13 @@ public class StockDao implements AbstractDao {
         return exchange;
     }
 
-    public LocalDate getUpdated() {
+    public DateTime getUpdated() {
         return updated;
     }
 
     public static StockDao getStock(String symbol) {
         String query = "select * from stock where symbol = '%s'";
-        ResultSet rs = SqliteDriver.executeQuery(String.format(query,symbol));
+        ResultSet rs = SqliteDriver.executeQuery(String.format(query, symbol));
         return parseStock(rs).get(0);
     }
 
@@ -107,7 +106,7 @@ public class StockDao implements AbstractDao {
         try {
             while (rs.next()) {
                 StockDao stock = new StockDao(rs.getString("SYMBOL"), rs.getString("NAME"), rs.getString("EXCHANGE"),
-                        LocalDate.parse(rs.getString("UPDATED"), GlobalUtil.DATE_FORMAT), rs.getDouble("SPREAD"),
+                        DateTime.parse(rs.getString("UPDATED")), rs.getDouble("SPREAD"),
                         rs.getDouble("DIVIDEND_SHARE"), rs.getDouble("DIVIDEND_YIELD"), rs.getDouble("EARNINGS_SHARE"),
                         rs.getDouble("EPSE_EST_CUR_YEAR"), rs.getDouble("EPSE_EST_NEXT_YEAR"),
                         rs.getDouble("MARKET_CAP"), rs.getDouble("EBITDA"), rs.getDouble("PE_RATIO"),
@@ -145,7 +144,7 @@ public class StockDao implements AbstractDao {
     public Map<String, String> getParams() {
         HashMap<String, String> map = new HashMap<>();
         map.put("SYMBOL", this.symbol);
-        map.put("NAME", this.name==null ? null : this.name.replaceAll("'", "''"));
+        map.put("NAME", this.name == null ? null : this.name.replaceAll("'", "''"));
         map.put("EXCHANGE", this.exchange);
         map.put("SPREAD", String.valueOf(this.spread));
         map.put("DIVIDEND_SHARE", String.valueOf(this.dividendShare));
@@ -157,15 +156,15 @@ public class StockDao implements AbstractDao {
         map.put("EBITDA", String.valueOf(this.ebitada));
         map.put("PE_RATIO", String.valueOf(this.peRatio));
         map.put("YR_TARGET_PRICE", String.valueOf(this.yearTargetPrice));
-        map.put("UPDATED", LocalDate.now().toString());
+        map.put("UPDATED", DateTime.now().toString());
         return map;
     }
 
-    public List<StockPriceDao> getPrices(){
+    public List<StockPriceDao> getPrices() {
         return this.cachedPrices == null ? StockPriceDao.getAllStockPrices(this.symbol) : this.cachedPrices;
     }
 
-    public StockPriceDao getLatestPrice(){
+    public StockPriceDao getLatestPrice() {
         List<StockPriceDao> prices = getPrices();
         return prices.get(0);
     }

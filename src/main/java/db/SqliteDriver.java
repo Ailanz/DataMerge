@@ -1,12 +1,13 @@
 package db;
 
+import dao.IndicatorDao;
 import dao.StockDao;
 import dao.StockPriceDao;
 import grabber.YahooFinanceBuilder;
 import grabber.YahooResult;
+import org.joda.time.DateTime;
 
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -37,13 +38,14 @@ public class SqliteDriver {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
 //        statement.execute("CREATE INDEX test_index ON stockprice (symbol, date);");
-        System.out.println("lol");
+//        statement.execute(IndicatorDao.getTableBuilder().generateQuery());
     }
 
     static void createTables() {
         try {
             statement.execute(StockDao.getTableBuilder().generateQuery());
             statement.execute(StockPriceDao.getTableBuilder().generateQuery());
+            statement.execute(IndicatorDao.getTableBuilder().generateQuery());
         } catch (SQLException e) {
 //            e.printStackTrace();
             System.out.println("Already exists.. moving on");
@@ -51,7 +53,7 @@ public class SqliteDriver {
     }
 
     public static synchronized void insertStockSymbols(List<String> symbols, String exchange) {
-        LocalDate now = LocalDate.now();
+        DateTime now = DateTime.now();
         InsertionBuilder builder = InsertionBuilder.aBuilder()
                 .withTableBuilder(StockDao.getTableBuilder());
 

@@ -3,12 +3,11 @@ package dao;
 import db.InsertionBuilder;
 import db.SqliteDriver;
 import db.TableBuilder;
-import util.GlobalUtil;
+import org.joda.time.DateTime;
 import util.KeyDateFilter;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.stream.Collectors;
 
 public class StockPriceDao implements AbstractDao {
     String symbol;
-    LocalDate date;
+    DateTime date;
     double high;
     double low;
     double open;
@@ -38,7 +37,7 @@ public class StockPriceDao implements AbstractDao {
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
             .withprimaryKeys("SYMBOL", "DATE");
 
-    public StockPriceDao(String symbol, LocalDate date, double high, double low, double open,
+    public StockPriceDao(String symbol, DateTime date, double high, double low, double open,
                          double close, double adjsutedClose, long volume) {
         this.symbol = symbol;
         this.date = date;
@@ -51,8 +50,8 @@ public class StockPriceDao implements AbstractDao {
     }
 
     @Override
-    public Map<String, String> getParams(){
-        HashMap<String,String> map = new HashMap<>();
+    public Map<String, String> getParams() {
+        HashMap<String, String> map = new HashMap<>();
         map.put("SYMBOL", this.symbol);
         map.put("HIGH", String.valueOf(high));
         map.put("LOW", String.valueOf(low));
@@ -85,7 +84,7 @@ public class StockPriceDao implements AbstractDao {
         List<StockPriceDao> stockPrices = new LinkedList<>();
         try {
             while (rs.next()) {
-                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), LocalDate.parse(rs.getString("DATE"), GlobalUtil.DATE_FORMAT),
+                StockPriceDao sp = new StockPriceDao(rs.getString("SYMBOL"), DateTime.parse(rs.getString("DATE")),
                         rs.getDouble("HIGH"), rs.getDouble("LOW"), rs.getDouble("OPEN"),
                         rs.getDouble("CLOSE"), rs.getDouble("ADJUSTED_CLOSE"), rs.getLong("VOLUME"));
                 stockPrices.add(sp);
@@ -98,15 +97,15 @@ public class StockPriceDao implements AbstractDao {
 
     public static synchronized void insertStockPrice(List<StockPriceDao> stockPrices) {
         //Remove Everything already added
-        if(stockPrices.size()==0) {
+        if (stockPrices.size() == 0) {
             System.err.print("Empty Stock Prices!");
         }
 
         //Lazy load
-        if(dateFiler==null){
+        if (dateFiler == null) {
             dateFiler = new KeyDateFilter();
             List<StockPriceDao> allPrices = getAllStockPrices();
-            allPrices.stream().forEach(s->dateFiler.add(s.getSymbol(), s.getDate()));
+            allPrices.stream().forEach(s -> dateFiler.add(s.getSymbol(), s.getDate()));
         }
 
         String name = stockPrices.get(0).getSymbol();
@@ -115,7 +114,7 @@ public class StockPriceDao implements AbstractDao {
                 .distinct()
                 .collect(Collectors.toList());
 
-        if(stockPrices.size()==0){
+        if (stockPrices.size() == 0) {
             System.out.println("Already esists, Skipping: " + name);
             return;
         }
@@ -130,7 +129,7 @@ public class StockPriceDao implements AbstractDao {
         return symbol;
     }
 
-    public LocalDate getDate() {
+    public DateTime getDate() {
         return date;
     }
 

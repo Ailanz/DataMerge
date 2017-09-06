@@ -1,10 +1,10 @@
 package exchange;
 
 import dao.StockDao;
+import org.joda.time.DateTime;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
@@ -14,24 +14,24 @@ import java.util.Scanner;
  */
 public class NASDAQ implements StockExchange {
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         File file = new File(classloader.getResource("nasdaqlisted.txt").getFile());
         List<StockDao> stocks = getInstance().parseFeed(file);
-        for(StockDao s : stocks) {
+        for (StockDao s : stocks) {
             System.out.println(s.getSymbol());
         }
     }
 
-    public String getExchange(){
+    public String getExchange() {
         return "NASDAQ";
     }
 
-    public static StockExchange getInstance(){
+    public static StockExchange getInstance() {
         return new NASDAQ();
     }
 
-    public List<StockDao> parseFeed(File file){
+    public List<StockDao> parseFeed(File file) {
         List<StockDao> stocks = new LinkedList<>();
         Scanner scan = null;
         try {
@@ -43,8 +43,8 @@ public class NASDAQ implements StockExchange {
 
         while (scan.hasNext()) {
             String symbol = scan.nextLine().split("[|]")[0];
-            if(scan.hasNext()) {
-                stocks.add(new StockDao(symbol, getExchange(), LocalDate.now()));
+            if (scan.hasNext()) {
+                stocks.add(new StockDao(symbol, getExchange(), DateTime.now()));
             }
         }
         return stocks;

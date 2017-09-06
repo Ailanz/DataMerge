@@ -7,11 +7,11 @@ public class PriceUnit {
     public static double MILLION = 1000000;
     public static double BILLION = 1000000000;
 
-    public static double toDouble(double num, double unit){
+    public static double toDouble(double num, double unit) {
         return num * unit;
     }
 
-    public static double parseNumber(String number){
+    public static double parseNumber(String number) {
         try {
             String lower = number.toLowerCase();
             if (lower.contains("m")) {
@@ -21,7 +21,7 @@ public class PriceUnit {
                 return Double.valueOf(lower.replace("b", "")) * BILLION;
             }
             return Double.valueOf(lower);
-        }catch(Exception e) {
+        } catch (Exception e) {
 //            System.err.print("cannot parse: " + number);
             return -1;
         }

@@ -29,9 +29,10 @@ public class YahooFinanceBuilder extends UrlHelper {
 //        execute(new LinkedList(new String[]{"aapl", "ebay"}));
     }
 
-    private YahooFinanceBuilder() {}
+    private YahooFinanceBuilder() {
+    }
 
-    public static YahooFinanceBuilder getInstance(){
+    public static YahooFinanceBuilder getInstance() {
         return new YahooFinanceBuilder();
     }
 
@@ -52,7 +53,7 @@ public class YahooFinanceBuilder extends UrlHelper {
         List<List<String>> chunks = chunkTheList(symbols);
 
         //Thread it!
-        chunks.forEach( symList -> {
+        chunks.forEach(symList -> {
             Runnable task = getWork(results, symList);
             pool.execute(task);
         });
@@ -67,22 +68,22 @@ public class YahooFinanceBuilder extends UrlHelper {
 
     private Runnable getWork(Map<String, YahooResult> results, List<String> symList) {
         return () -> {
-                    String symbolList = StringUtils.join(symList, ',').replace('[', ' ').replace(']', ' ');
-                    JsonNode node = getJsonNode(url.replace("%s", symbolList), 100);
-                    node = node.get("query").get("results").get("quote");
-                    if (symList.size() > 1) {
-                        node.forEach(s -> {
-                            YahooResult r = getYahooResult(s);
-                            results.put(r.getSymbol(), r);
-                        });
-                    } else {
-                        YahooResult r = getYahooResult(node);
-                        results.put(r.getSymbol(), r);
-                    }
-                };
+            String symbolList = StringUtils.join(symList, ',').replace('[', ' ').replace(']', ' ');
+            JsonNode node = getJsonNode(url.replace("%s", symbolList), 100);
+            node = node.get("query").get("results").get("quote");
+            if (symList.size() > 1) {
+                node.forEach(s -> {
+                    YahooResult r = getYahooResult(s);
+                    results.put(r.getSymbol(), r);
+                });
+            } else {
+                YahooResult r = getYahooResult(node);
+                results.put(r.getSymbol(), r);
+            }
+        };
     }
 
-    private List<List<String>> chunkTheList(List<String> source){
+    private List<List<String>> chunkTheList(List<String> source) {
 
         List<List<String>> groups = range(0, source.size())
                 .boxed()

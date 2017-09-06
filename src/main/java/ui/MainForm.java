@@ -34,7 +34,7 @@ public class MainForm extends JPanel {
 
         list.addListSelectionListener(ev -> {
             String selected = list.getSelectedValue().toString().trim();
-            chartPanel.setChart(createChart(StockPriceDataSet.getDataSet(selected),selected));
+            chartPanel.setChart(createChart(StockPriceDataSet.getDataSet(selected), selected));
             repaint();
             revalidate();
         });

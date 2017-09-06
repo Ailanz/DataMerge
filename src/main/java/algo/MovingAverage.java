@@ -10,12 +10,12 @@ public class MovingAverage {
     private int index = 0;
     private double samples[];
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         MovingAverage mv = new MovingAverage(4);
         MovingAverage mv2 = new MovingAverage(7);
-        double[] a = new double[] {1,2,3,4,5,6,7,8,9,10,11,12};
+        double[] a = new double[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
 
-        for(int i=0; i < 100; i++){
+        for (int i = 0; i < 100; i++) {
             mv.add(i);
             mv2.add(i);
             System.out.println("Short: " + mv.getAverage() + ", Long: " + mv2.getAverage());
@@ -40,10 +40,10 @@ public class MovingAverage {
         return total / interval;
     }
 
-    public static double[] getSimpleAverage(double[] prices){
+    public static double[] getSimpleAverage(double[] prices) {
         MovingAverage ma = new MovingAverage(prices.length);
         double[] ret = new double[prices.length];
-        for(int i=0; i< prices.length; i++){
+        for (int i = 0; i < prices.length; i++) {
             ma.add(prices[i]);
             ret[i] = ma.getAverage();
         }
