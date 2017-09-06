@@ -1,6 +1,7 @@
 package grabber;
 
 import dao.IndicatorDao;
+import dao.StockDao;
 import dao.StockPriceDao;
 import org.joda.time.DateTime;
 
@@ -8,41 +9,70 @@ import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by Ailan on 9/5/2017.
  */
 public class DailyIndicatorGrabber {
-    static AlphaVantageBuilder adxBuilder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.ADX)
-            .withInterval(AlphaVantageEnum.Interval.DAILY)
-            .withTimePeriod(7);
 
-    static AlphaVantageBuilder macdBuilder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.MACD)
-            .withInterval(AlphaVantageEnum.Interval.DAILY)
-            .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
 
-    static AlphaVantageBuilder rsiBuilder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.RSI)
-            .withInterval(AlphaVantageEnum.Interval.DAILY)
-            .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
+    public static void main(String args[]) throws InterruptedException {
+        IndicatorDao.insertIndicator(getIndicators("MDNA.to"));
+//        List<String> stocks = StockDao.getAllStocks().stream().map(s->s.getSymbol()).collect(Collectors.toList());;
+//        populateIndicators(stocks);
+    }
 
-    static AlphaVantageBuilder cciBuilder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.CCI)
-            .withInterval(AlphaVantageEnum.Interval.DAILY)
-            .withTimePeriod(7);
+    public static void populateIndicators(List<String> symbols) throws InterruptedException {
+        ExecutorService pool = Executors.newFixedThreadPool(30);
 
-    static AlphaVantageBuilder aroonBuilder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.AROON)
-            .withInterval(AlphaVantageEnum.Interval.DAILY)
-            .withTimePeriod(7);
+        for (String sym : symbols) {
+            Runnable task = () -> {
 
-    public static void main(String args[]){
-        IndicatorDao.insertIndicator(getIndicators("AAPL"));
+                List<IndicatorDao> indicators = getIndicators(sym);
+                if (indicators == null || indicators.size() == 0) {
+                    System.out.println("INDICATOR Missing: " + sym);
+                } else {
+                    IndicatorDao.insertIndicator(indicators);
+                    System.out.println("INDICATOR: Processed: " + sym );
+                }
+            };
+            pool.execute(task);
+        }
+        pool.shutdown();
+        pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
+
     }
 
     public static List<IndicatorDao> getIndicators(String symbol) {
+        AlphaVantageBuilder adxBuilder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageEnum.Function.ADX)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withTimePeriod(7);
+
+        AlphaVantageBuilder macdBuilder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageEnum.Function.MACD)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
+
+        AlphaVantageBuilder rsiBuilder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageEnum.Function.RSI)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
+
+        AlphaVantageBuilder cciBuilder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageEnum.Function.CCI)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withTimePeriod(7);
+
+        AlphaVantageBuilder aroonBuilder = AlphaVantageBuilder.aBuilder()
+                .withFunction(AlphaVantageEnum.Function.AROON)
+                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withTimePeriod(7);
+
         HashMap<DateTime, DataStore> dataGroup = new HashMap<>();
         adxBuilder.withSymbol(symbol).execute().forEach(r->{
             dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
