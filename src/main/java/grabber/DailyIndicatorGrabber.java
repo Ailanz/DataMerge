@@ -21,9 +21,9 @@ public class DailyIndicatorGrabber {
 
 
     public static void main(String args[]) throws InterruptedException {
-        IndicatorDao.insertIndicator(getIndicators("MDNA.to"));
-//        List<String> stocks = StockDao.getAllStocks().stream().map(s->s.getSymbol()).collect(Collectors.toList());;
-//        populateIndicators(stocks);
+//        IndicatorDao.insertIndicator(getIndicators("MDNA.to"));
+        List<String> stocks = StockDao.getAllStocks().stream().map(s->s.getSymbol()).collect(Collectors.toList());;
+        populateIndicators(stocks);
     }
 
     public static void populateIndicators(List<String> symbols) throws InterruptedException {
@@ -74,43 +74,50 @@ public class DailyIndicatorGrabber {
                 .withTimePeriod(7);
 
         HashMap<DateTime, DataStore> dataGroup = new HashMap<>();
-        adxBuilder.withSymbol(symbol).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setAdx(r.getData().get("ADX").asDouble());
-        });
 
-        macdBuilder.withSymbol(symbol).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setMacd(r.getData().get("MACD").asDouble());
-            dataGroup.get(r.getDate()).setMacdHist(r.getData().get("MACD_Hist").asDouble());
-            dataGroup.get(r.getDate()).setMacdSignal(r.getData().get("MACD_Signal").asDouble());
-        });
+        for(int i=0; i<5;i++) {
+            try {
+                adxBuilder.withSymbol(symbol).execute().forEach(r->{
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setAdx(r.getData().get("ADX").asDouble());
+                });
+                macdBuilder.withSymbol(symbol).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setMacd(r.getData().get("MACD").asDouble());
+                    dataGroup.get(r.getDate()).setMacdHist(r.getData().get("MACD_Hist").asDouble());
+                    dataGroup.get(r.getDate()).setMacdSignal(r.getData().get("MACD_Signal").asDouble());
+                });
 
-        rsiBuilder.withSymbol(symbol).withTimePeriod(7).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setRsi7(r.getData().get("RSI").asDouble());
-        });
+                rsiBuilder.withSymbol(symbol).withTimePeriod(7).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setRsi7(r.getData().get("RSI").asDouble());
+                });
 
-        rsiBuilder.withSymbol(symbol).withTimePeriod(14).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setRsi14(r.getData().get("RSI").asDouble());
-        });
+                rsiBuilder.withSymbol(symbol).withTimePeriod(14).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setRsi14(r.getData().get("RSI").asDouble());
+                });
 
-        rsiBuilder.withSymbol(symbol).withTimePeriod(25).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setRsi25(r.getData().get("RSI").asDouble());
-        });
+                rsiBuilder.withSymbol(symbol).withTimePeriod(25).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setRsi25(r.getData().get("RSI").asDouble());
+                });
 
-        cciBuilder.withSymbol(symbol).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setCci(r.getData().get("CCI").asDouble());
-        });
+                cciBuilder.withSymbol(symbol).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setCci(r.getData().get("CCI").asDouble());
+                });
 
-        aroonBuilder.withSymbol(symbol).execute().forEach(r->{
-            dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-            dataGroup.get(r.getDate()).setAroonUp(r.getData().get("Aroon Up").asDouble());
-            dataGroup.get(r.getDate()).setAroonDown(r.getData().get("Aroon Down").asDouble());
-        });
+                aroonBuilder.withSymbol(symbol).execute().forEach(r -> {
+                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+                    dataGroup.get(r.getDate()).setAroonUp(r.getData().get("Aroon Up").asDouble());
+                    dataGroup.get(r.getDate()).setAroonDown(r.getData().get("Aroon Down").asDouble());
+                });
+                break;
+            }catch(Exception e) {
+                System.err.println("Retry...");
+            }
+        }
 
         List<IndicatorDao> ret = new LinkedList<>();
 

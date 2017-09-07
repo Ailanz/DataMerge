@@ -2,6 +2,7 @@ package core;
 
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
+import dao.IndicatorDao;
 import dao.StockDao;
 import dao.StockPriceDao;
 import org.joda.time.DateTime;
@@ -9,6 +10,7 @@ import util.TimeRange;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +33,7 @@ public class StrategyBuilder {
                 .withTimeRange(new TimeRange(DateTime.now().minusDays(400), DateTime.now()))
                 .withBuyAfterDate(DateTime.now().minusDays(200))
                 .withMovingAverages(s, l)
-                .execute(StockDao.getStock("ABCB"));
+                .execute(StockDao.getStock("OB"));
         System.out.println(transactions);
     }
 
@@ -60,6 +62,13 @@ public class StrategyBuilder {
         return this;
     }
 
+    public boolean buyCondition(IndicatorDao indicator){
+        if(indicator==null) {
+            return false;
+        }
+        return indicator.getAdx() > 30 && indicator.getRsi7() < 60 && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
+    }
+
     public List<TransactionRecord> execute(StockDao stock) {
         List<TransactionRecord> records = new LinkedList<>();
         List<StockPriceDao> prices = stock.getPrices();
@@ -69,16 +78,17 @@ public class StrategyBuilder {
 
         prices = prices.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
 
-        double spread = 0;
+        double spread = 0.1;
         Boolean isShortOverLong = null;
         boolean holdingStock = false;
         double holdingPrice = 0;
+        Map<DateTime, IndicatorDao> indicators = IndicatorDao.getIndicatorMap(stock.getSymbol());
         for (StockPriceDao sp : prices) {
-//            double price = (sp.getHigh() + sp.getLow())/2;
             double price = sp.getClose();
             DateTime curDate = sp.getDate();
             shortMA.add(price);
             longMA.add(price);
+            IndicatorDao indicator = indicators.get(sp.getDate());
 
             if (buyAfterDate == null || curDate.isAfter(buyAfterDate)) {
                 double shortAvg = shortMA.getAverage();
@@ -94,7 +104,7 @@ public class StrategyBuilder {
                 }
 
                 if (!isShortOverLong && shortAvg > longAvg) {
-                    if (!holdingStock) {
+                    if (!holdingStock && buyCondition(indicator)) {
                         records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), stock.getSymbol(), price + spread));
                         holdingPrice = price;
                         holdingStock = true;

@@ -17,6 +17,7 @@ public class StockFilterBuilder {
     private double minMarketCap = 0;
     private double averageVolume = 0;
     private StockExchange stockExchange = null;
+    private Boolean lowerThanTarget = null;
 
     private StockFilterBuilder() {
     }
@@ -45,14 +46,31 @@ public class StockFilterBuilder {
         return this;
     }
 
+    public StockFilterBuilder withLowerThanTargetPrice(boolean isLower) {
+        this.lowerThanTarget = isLower;
+        return this;
+    }
+
     public List<StockDao> execute(List<StockDao> stocks) {
         return stocks.stream()
                 .filter(s -> s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
-                .filter(s -> stockExchange == null ? true : s.getExchange().equals(stockExchange.getExchange()))
-                .filter(s -> filterAverageVolume(s))
+                .filter(s -> stockExchange == null || s.getExchange().equals(stockExchange.getExchange()))
+                .filter(this::filterByTargetPrice)
+                .filter(this::filterAverageVolume)
                 .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(7)))
                 .collect(Collectors.toList());
 
+    }
+
+    private boolean filterByTargetPrice(StockDao s){
+        if(lowerThanTarget==null) {
+            return true;
+        }
+        if(lowerThanTarget) {
+            return s.getYearTargetPrice() - s.getLatestPrice().getClose() > 0;
+        }else {
+            return s.getYearTargetPrice() - s.getLatestPrice().getClose() < 0;
+        }
     }
 
     private boolean filterAverageVolume(StockDao s) {

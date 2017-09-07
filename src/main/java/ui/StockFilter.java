@@ -14,8 +14,9 @@ public class StockFilter {
     public static List<StockDao> marketCapFilter(List<StockDao> stocks) {
         StockFilterBuilder builder = StockFilterBuilder.getInstance()
                 .withMinMarketCap(PriceUnit.toDouble(100, PriceUnit.MILLION))
-                .withStockExchange(NASDAQ.getInstance());
-//                .withAverageVolumeOver(5000);
+                .withStockExchange(NASDAQ.getInstance())
+                .withLowerThanTargetPrice(false)
+                .withAverageVolumeOver(5000);
         return builder.execute(stocks);
     }
 }

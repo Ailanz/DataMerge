@@ -4,6 +4,7 @@ import db.InsertionBuilder;
 import db.SqliteDriver;
 import db.TableBuilder;
 import org.joda.time.DateTime;
+import ui.MainForm;
 import util.KeyDateFilter;
 
 import java.sql.ResultSet;
@@ -73,7 +74,7 @@ public class IndicatorDao implements AbstractDao {
         //Lazy load
         if (dateFiler == null) {
             dateFiler = new KeyDateFilter();
-            List<IndicatorDao> allPrices = getAllStockPrices();
+            List<IndicatorDao> allPrices = getAllIndicators();
             allPrices.stream().forEach(s -> dateFiler.add(s.getSymbol(), s.getDate()));
         }
 
@@ -94,7 +95,20 @@ public class IndicatorDao implements AbstractDao {
         SqliteDriver.executeInsert(builder.execute());
     }
 
-    public static List<IndicatorDao> getAllStockPrices() {
+    public static List<IndicatorDao> getAllIndicators(String symbol) {
+        String query = String.format("select * from Indicator where symbol = '%s' order by DATE desc", symbol);
+        ResultSet rs = SqliteDriver.executeQuery(query);
+        return parseIndicators(rs);
+    }
+
+    public static Map<DateTime, IndicatorDao> getIndicatorMap(String symbol){
+        List<IndicatorDao> indicators = getAllIndicators(symbol);
+        Map<DateTime, IndicatorDao> map = new HashMap<>();
+        indicators.forEach(i->map.put(i.getDate(),i));
+        return map;
+    }
+
+    public static List<IndicatorDao> getAllIndicators() {
         String query = "select * from Indicator order by DATE desc";
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseIndicators(rs);
