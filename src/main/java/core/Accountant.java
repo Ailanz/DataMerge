@@ -15,9 +15,8 @@ import java.util.Stack;
  */
 public class Accountant {
     //THE accountant
-    public Accountant() {
 
-    }
+    double cash;
 
     public static void main(String args[]) {
         List<StockDao> allStocks = StockDao.getAllStocks();
@@ -35,7 +34,6 @@ public class Accountant {
             book.addTransaction(transactions);
         }
         book.printSummary();
-//        System.out.println("Total: " + sum / count + " pos : " + pos + " , neg : " + neg);
     }
     
 }

@@ -66,7 +66,8 @@ public class StrategyBuilder {
         if(indicator==null) {
             return false;
         }
-        return indicator.getAdx() > 30 && indicator.getRsi7() < 60 && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
+        return indicator.getAdx() > 30 ;
+//        && indicator.getRsi7() < 60 && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
     }
 
     public List<TransactionRecord> execute(StockDao stock) {

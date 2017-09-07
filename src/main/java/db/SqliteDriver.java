@@ -38,7 +38,7 @@ public class SqliteDriver {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
 //        statement.execute("CREATE INDEX test_index ON stockprice (symbol, date);");
-//        statement.execute(IndicatorDao.getTableBuilder().generateQuery());
+        statement.execute(IndicatorDao.getTableBuilder().generateQuery());
     }
 
     static void createTables() {
