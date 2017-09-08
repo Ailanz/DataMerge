@@ -11,11 +11,15 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.CandlestickRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.joda.time.DateTime;
+import util.TimeRange;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by Ailan on 9/3/2017.
@@ -24,25 +28,33 @@ public class MainForm extends JPanel {
     JList list;
 
     public MainForm() {
+        ExecutorService pool = Executors.newFixedThreadPool(30);
+
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(10, 10, 10, 10));
         JScrollPane pane = constructStockList();
         add(pane, BorderLayout.WEST);
-        JFreeChart chart = createChart(StockPriceDataSet.getDataSet("AAPL"), "AAPL");
+
+        DateTime minDate = new DateTime(2017, 9, 6, 0, 0);
+        DateTime maxDate = new DateTime(2017, 9, 7, 0, 0);
+        TimeRange timeRange = new TimeRange(minDate, maxDate);
+
+        JFreeChart chart = createChart(StockPriceDataSet.getDataSet("AAPL", timeRange), "AAPL", timeRange);
         ChartPanel chartPanel = new ChartPanel(chart);
         add(chartPanel, BorderLayout.CENTER);
 
         list.addListSelectionListener(ev -> {
-            String selected = list.getSelectedValue().toString().trim();
-            chartPanel.setChart(createChart(StockPriceDataSet.getDataSet(selected), selected));
-            repaint();
-            revalidate();
+            Runnable task = () -> {
+                String selected = list.getSelectedValue().toString().trim();
+                chartPanel.setChart(createChart(StockPriceDataSet.getDataSet(selected, timeRange), selected, timeRange));
+                repaint();
+                revalidate();
+            };
+            pool.execute(task);
         });
-
-
     }
 
-    private JFreeChart createChart(final XYDataset dataset, String symbol) {
+    private JFreeChart createChart(final XYDataset dataset, String symbol, TimeRange timeRange) {
         StockDao stock = StockDao.getStock(symbol);
         DateAxis domainAxis = new DateAxis("Date");
         NumberAxis rangeAxis = new NumberAxis("Price");
@@ -54,18 +66,18 @@ public class MainForm extends JPanel {
         XYPlot mainPlot = new XYPlot(dataset, domainAxis, rangeAxis, renderer);
 
         //moving average
-        addMovingAverage(symbol, mainPlot, 12, 1);
-        addMovingAverage(symbol, mainPlot, 24, 2);
+        addMovingAverage(symbol, mainPlot, 5, 1, timeRange);
+        addMovingAverage(symbol, mainPlot, 13, 2, timeRange);
 
         JFreeChart chart = new JFreeChart(symbol + " - " + stock.getName(), null, mainPlot, false);
         chart.getXYPlot().setOrientation(PlotOrientation.VERTICAL);
         return chart;
     }
 
-    private void addMovingAverage(String symbol, XYPlot mainPlot, int interval, int index) {
+    private void addMovingAverage(String symbol, XYPlot mainPlot, int interval, int index, TimeRange timeRange) {
         XYLineAndShapeRenderer lineRender = new XYLineAndShapeRenderer();
         lineRender.setShapesVisible(false);
-        XYDataset ma = StockPriceDataSet.simpleMovingAverage(symbol, interval);
+        XYDataset ma = StockPriceDataSet.simpleMovingAverage(symbol, interval, timeRange);
         mainPlot.setDataset(index, ma);
         mainPlot.setRenderer(index, lineRender);
 //        mainPlot.set

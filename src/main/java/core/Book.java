@@ -19,6 +19,38 @@ public class Book {
         records.forEach(r -> addTransaction(r));
     }
 
+    public double totalPNL(double latestPrice) {
+        double totalRealized = 0;
+        double totalUnrealized = 0;
+        for (Map.Entry<String, List<TransactionRecord>> s : masterRecord.entrySet()) {
+            List<TransactionRecord> records = s.getValue();
+            Stack<TransactionRecord> stack = new Stack<>();
+            double realized = 0;
+            double unrealized = 0;
+            for (TransactionRecord record : records) {
+                if (record.getType() == TransactionRecord.Type.BUY) {
+                    stack.push(record);
+                }
+
+                if (record.getType() == TransactionRecord.Type.SELL ) {
+                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                }
+
+                if (record.getType() == TransactionRecord.Type.EXIT){
+                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                }
+            }
+            while (!stack.isEmpty()) {
+                TransactionRecord r = stack.pop();
+                unrealized += r.getNumOfShare() * (latestPrice - r.getPrice());
+            }
+            totalRealized += realized;
+            totalUnrealized += unrealized;
+        }
+        //STOCK GET LATEST PRICE IS WRONG, NEED REAL TIME API TO GET IT RIGHT!
+      return totalRealized + totalUnrealized;
+    }
+
     public void printSummary() {
         double totalRealized = 0;
         double totalUnrealized = 0;
@@ -33,23 +65,24 @@ public class Book {
             double unrealized = 0;
             for (TransactionRecord record : records) {
                 if (record.getType() == TransactionRecord.Type.BUY) {
-                    totalPurchase += record.getPrice();
+                    totalPurchase += record.getNumOfShare() * record.getPrice();
                     stack.push(record);
                     totalBuys++;
                 }
 
                 if (record.getType() == TransactionRecord.Type.SELL ) {
-                    realized += record.getPrice() - stack.pop().getPrice();
+                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
                     totalSells++;
                 }
 
                 if (record.getType() == TransactionRecord.Type.EXIT){
-                    realized += record.getPrice() - stack.pop().getPrice();
+                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
                     totalExits++;
                 }
             }
             while (!stack.isEmpty()) {
-                unrealized += StockDao.getStock(records.get(0).getSymbol()).getLatestPrice().getClose() - stack.pop().getPrice();
+                TransactionRecord r = stack.pop();
+                unrealized += r.getNumOfShare() * (StockDao.getStock(r.getSymbol()).getLatestPrice().getClose() - r.getPrice());
             }
             totalRealized += realized;
             totalUnrealized += unrealized;

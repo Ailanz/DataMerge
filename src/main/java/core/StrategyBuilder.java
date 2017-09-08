@@ -100,13 +100,13 @@ public class StrategyBuilder {
                 }
 
                 if (holdingStock && price <= holdingPrice * (1 - maxLossPercent)) {
-                    records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), stock.getSymbol(), price - spread));
+                    records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), stock.getSymbol(), 1, price - spread));
                     holdingStock = false;
                 }
 
                 if (!isShortOverLong && shortAvg > longAvg) {
                     if (!holdingStock && buyCondition(indicator)) {
-                        records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), stock.getSymbol(), price + spread));
+                        records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), stock.getSymbol(), 1, price + spread));
                         holdingPrice = price;
                         holdingStock = true;
                     }
@@ -115,7 +115,7 @@ public class StrategyBuilder {
 
                 if (isShortOverLong && longAvg > shortAvg) {
                     if (holdingStock && holdingPrice < price) {
-                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), stock.getSymbol(), price - spread));
+                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), stock.getSymbol(), 1, price - spread));
                         holdingStock = false;
                     }
                     isShortOverLong = false;

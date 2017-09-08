@@ -6,10 +6,10 @@ package algo;
 public class MovingAverage {
 
     protected int interval;
+
     protected double total = 0d;
     private int index = 0;
     private double samples[];
-
     public static void main(String args[]) {
         MovingAverage mv = new MovingAverage(4);
         MovingAverage mv2 = new MovingAverage(7);
@@ -48,5 +48,21 @@ public class MovingAverage {
             ret[i] = ma.getAverage();
         }
         return ret;
+    }
+
+    public int getInterval() {
+        return interval;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public double[] getSamples() {
+        return samples;
     }
 }

@@ -91,10 +91,10 @@ public class DailyIndicatorGrabber {
 //                    dataGroup.get(r.getDate()).setMacdSignal(r.getData().get("MACD_Signal").asDouble());
 //                });
 //
-                rsiBuilder.withSymbol(symbol).withTimePeriod(7).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setRsi7(r.getData().get("RSI").asDouble());
-                });
+//                rsiBuilder.withSymbol(symbol).withTimePeriod(7).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setRsi7(r.getData().get("RSI").asDouble());
+//                });
 //
 //                rsiBuilder.withSymbol(symbol).withTimePeriod(14).execute().forEach(r -> {
 //                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());

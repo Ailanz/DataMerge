@@ -2,6 +2,7 @@ package simulator;
 
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
+import algo.OptimizerMA;
 import core.*;
 import dao.StockDao;
 import dao.StockPriceDao;
@@ -9,6 +10,7 @@ import grabber.AlphaVantageBuilder;
 import grabber.AlphaVantageEnum;
 import grabber.DailyPriceGrabber;
 import grabber.ResultData;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import ui.StockFilter;
 import util.TimeRange;
@@ -25,12 +27,10 @@ import java.util.stream.Collectors;
  */
 public class DayTradeSimulator {
 
-    static AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
-            .withFunction(AlphaVantageEnum.Function.TIME_SERIES_INTRADAY)
-            .withOutputSize(AlphaVantageEnum.OutputSize.COMPACT)
-            .withInterval(AlphaVantageEnum.Interval.FIVE);
 
     public static void main(String args[]) throws InterruptedException {
+        DateTime minDate = new DateTime(2017,9,6,0,0);
+        DateTime maxDate = new DateTime(2017,9,7,0,0);
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
         List<StockDao> allStocks = StockDao.getAllStocks();
@@ -38,11 +38,14 @@ public class DayTradeSimulator {
         Book book = new Book();
         for (StockDao stock : allStocks) {
             Runnable task = () -> {
-                MovingAverage s = new ExponentialMovingAverage(5);
-                MovingAverage l = new ExponentialMovingAverage(8);
+                Pair<Integer,Integer> lengths = OptimizerMA.optimizeEarnings(stock.getSymbol());
+                MovingAverage s = new ExponentialMovingAverage(lengths.getLeft());
+                MovingAverage l = new ExponentialMovingAverage(lengths.getRight());
                 List<TransactionRecord> transactions = DayStrategyBuilder.aBuilder()
-                        .withBuyAfterDate(DateTime.now().minusDays(1))
+                        .withBuyAfterDate(minDate)
+                        .withTimeRange(new TimeRange(minDate, maxDate))
                         .withMovingAverages(s, l)
+                        .withValueToFulfill(100)
                         .execute(stock);
                 Accountant acct = new Accountant();
 

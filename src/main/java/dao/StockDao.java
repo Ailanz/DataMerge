@@ -90,13 +90,13 @@ public class StockDao implements AbstractDao {
         return updated;
     }
 
-    public static StockDao getStock(String symbol) {
+    public static synchronized StockDao getStock(String symbol) {
         String query = "select * from stock where symbol = '%s'";
         ResultSet rs = SqliteDriver.executeQuery(String.format(query, symbol));
         return parseStock(rs).get(0);
     }
 
-    public static List<StockDao> getAllStocks() {
+    public static synchronized List<StockDao> getAllStocks() {
         String query = "select * from stock";
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStock(rs);

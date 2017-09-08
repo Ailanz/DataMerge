@@ -3,23 +3,31 @@ package ui;
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
 import dao.StockPriceDao;
+import grabber.LivePrice;
 import org.jfree.data.xy.AbstractXYDataset;
 import org.jfree.data.xy.DefaultOHLCDataset;
 import org.jfree.data.xy.OHLCDataItem;
+import org.joda.time.DateTime;
+import util.TimeRange;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by Ailan on 9/3/2017.
  */
 public class StockPriceDataSet {
 
-    protected static OHLCDataItem[] getData(String symbol) {
+    protected static OHLCDataItem[] getData(String symbol, TimeRange timeRange) {
         List<OHLCDataItem> dataItems = new ArrayList<>();
-        List<StockPriceDao> sp = StockPriceDao.getAllStockPrices(symbol);
+//        List<StockPriceDao> sp = StockPriceDao.getAllStockPrices(symbol);
+        List<StockPriceDao> sp = LivePrice.getDaysPrice(symbol);
 
-        sp.stream().limit(100).forEach(s -> dataItems.add(
+
+        sp = sp.stream().filter(s -> timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+        sp.stream().forEach(s -> dataItems.add(
                 new OHLCDataItem(s.getDate().toDate(),
                         s.getOpen(), s.getHigh(), s.getLow(), s.getClose(), s.getVolume())));
 
@@ -27,20 +35,22 @@ public class StockPriceDataSet {
         return data;
     }
 
-    protected static AbstractXYDataset getDataSet(String stockSymbol) {
+    protected static AbstractXYDataset getDataSet(String stockSymbol, TimeRange timeRange) {
         DefaultOHLCDataset result = null;
         OHLCDataItem[] data;
-        data = getData(stockSymbol);
+        data = getData(stockSymbol, timeRange);
         result = new DefaultOHLCDataset(stockSymbol, data);
 
         return result;
     }
 
-    public static AbstractXYDataset simpleMovingAverage(String symbol, int interval) {
+    public static AbstractXYDataset simpleMovingAverage(String symbol, int interval, TimeRange timeRange) {
         MovingAverage mv = new ExponentialMovingAverage(interval);
         List<OHLCDataItem> dataItems = new ArrayList<>();
-        List<StockPriceDao> sp = StockPriceDao.getAllStockPrices(symbol);
-        sp.stream().limit(100 + interval).sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).forEach(s -> {
+//        List<StockPriceDao> sp = StockPriceDao.getAllStockPrices(symbol);
+        List<StockPriceDao> sp = LivePrice.getDaysPrice(symbol);
+
+        sp.stream().filter(s -> timeRange.isWithin(s.getDate())).forEach(s -> {
             mv.add(s.getClose());
             dataItems.add(new OHLCDataItem(s.getDate().toDate(),
                     mv.getAverage(), mv.getAverage(), mv.getAverage(), mv.getAverage(), mv.getAverage()));
