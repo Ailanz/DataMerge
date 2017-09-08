@@ -15,7 +15,7 @@ public class Book {
         masterRecord.get(record.getSymbol()).add(record);
     }
 
-    public void addTransaction(List<TransactionRecord> records) {
+    public synchronized void addTransaction(List<TransactionRecord> records) {
         records.forEach(r -> addTransaction(r));
     }
 

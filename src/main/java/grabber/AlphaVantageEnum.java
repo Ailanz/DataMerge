@@ -4,6 +4,7 @@ public class AlphaVantageEnum {
     public enum Function {
         TIME_SERIES_DAILY,
         TIME_SERIES_DAILY_ADJUSTED,
+        TIME_SERIES_INTRADAY,
         ADX,
         MACD,
         RSI,
@@ -17,7 +18,10 @@ public class AlphaVantageEnum {
     }
 
     public enum Interval {
-        DAILY
+        DAILY,
+        ONE,
+        FIVE,
+        FIFTEEN,
     }
 
     public enum SeriesType {

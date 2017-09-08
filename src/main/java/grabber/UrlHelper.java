@@ -18,8 +18,8 @@ public class UrlHelper {
     }
 
     static {
-        System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
-        System.setProperty("sun.net.client.defaultReadTimeout", "30000");
+        System.setProperty("sun.net.client.defaultConnectTimeout", "20000");
+        System.setProperty("sun.net.client.defaultReadTimeout", "20000");
     }
 
     protected static JsonNode getJsonNode(String url, int retry) {

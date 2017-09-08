@@ -23,10 +23,10 @@ public class Accountant {
         allStocks = StockFilter.marketCapFilter(allStocks);
         Book book = new Book();
         for (StockDao stock : allStocks) {
-            MovingAverage s = new ExponentialMovingAverage(12);
-            MovingAverage l = new ExponentialMovingAverage(24);
+            MovingAverage s = new ExponentialMovingAverage(5);
+            MovingAverage l = new ExponentialMovingAverage(8);
             List<TransactionRecord> transactions = StrategyBuilder.aBuilder()
-                    .withTimeRange(new TimeRange(DateTime.now().minusDays(400), DateTime.now()))
+                    .withTimeRange(new TimeRange(DateTime.now().minusDays(100), DateTime.now()))
                     .withBuyAfterDate(DateTime.now().minusDays(100))
                     .withMovingAverages(s, l)
                     .execute(StockDao.getStock(stock.getSymbol()));
@@ -35,5 +35,5 @@ public class Accountant {
         }
         book.printSummary();
     }
-    
+
 }

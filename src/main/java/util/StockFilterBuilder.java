@@ -18,6 +18,7 @@ public class StockFilterBuilder {
     private double averageVolume = 0;
     private StockExchange stockExchange = null;
     private Boolean lowerThanTarget = null;
+    private double maxSharePrice = Double.MAX_VALUE;
 
     private StockFilterBuilder() {
     }
@@ -28,6 +29,11 @@ public class StockFilterBuilder {
 
     public StockFilterBuilder withMaxMarketCap(double max) {
         this.maxMarketCap = max;
+        return this;
+    }
+
+    public StockFilterBuilder withMaxSharePrice(double max) {
+        this.maxSharePrice = max;
         return this;
     }
 
@@ -57,7 +63,8 @@ public class StockFilterBuilder {
                 .filter(s -> stockExchange == null || s.getExchange().equals(stockExchange.getExchange()))
                 .filter(this::filterByTargetPrice)
                 .filter(this::filterAverageVolume)
-                .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(7)))
+                .filter(s->s.getLatestPrice().getClose() < maxSharePrice)
+                .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(5)))
                 .collect(Collectors.toList());
 
     }

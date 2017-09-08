@@ -2,10 +2,8 @@ package grabber;
 
 import dao.IndicatorDao;
 import dao.StockDao;
-import dao.StockPriceDao;
 import org.joda.time.DateTime;
 
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,7 +20,8 @@ public class DailyIndicatorGrabber {
 
     public static void main(String args[]) throws InterruptedException {
 //        IndicatorDao.insertIndicator(getIndicators("MDNA.to"));
-        List<String> stocks = StockDao.getAllStocks().stream().map(s->s.getSymbol()).collect(Collectors.toList());;
+        List<String> stocks = StockDao.getAllStocks().stream().map(s -> s.getSymbol()).collect(Collectors.toList());
+        ;
         populateIndicators(stocks);
     }
 
@@ -37,7 +36,7 @@ public class DailyIndicatorGrabber {
                     System.out.println("INDICATOR Missing: " + sym);
                 } else {
                     IndicatorDao.insertIndicator(indicators);
-                    System.out.println("INDICATOR: Processed: " + sym );
+                    System.out.println("INDICATOR: Processed: " + sym);
                 }
             };
             pool.execute(task);
@@ -48,89 +47,94 @@ public class DailyIndicatorGrabber {
     }
 
     public static List<IndicatorDao> getIndicators(String symbol) {
+        return getIndicators(symbol, AlphaVantageEnum.Interval.DAILY, 7);
+    }
+
+    public static List<IndicatorDao> getIndicators(String symbol, AlphaVantageEnum.Interval interval, int timePeriod) {
         AlphaVantageBuilder adxBuilder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.ADX)
-                .withInterval(AlphaVantageEnum.Interval.DAILY)
-                .withTimePeriod(7);
+                .withInterval(interval)
+                .withTimePeriod(timePeriod);
 
         AlphaVantageBuilder macdBuilder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.MACD)
-                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withInterval(interval)
                 .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
 
         AlphaVantageBuilder rsiBuilder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.RSI)
-                .withInterval(AlphaVantageEnum.Interval.DAILY)
+                .withInterval(interval)
                 .withSeriesType(AlphaVantageEnum.SeriesType.CLOSE);
 
         AlphaVantageBuilder cciBuilder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.CCI)
                 .withInterval(AlphaVantageEnum.Interval.DAILY)
-                .withTimePeriod(7);
+                .withTimePeriod(timePeriod);
 
         AlphaVantageBuilder aroonBuilder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.AROON)
-                .withInterval(AlphaVantageEnum.Interval.DAILY)
-                .withTimePeriod(7);
+                .withInterval(interval)
+                .withTimePeriod(timePeriod);
 
         HashMap<DateTime, DataStore> dataGroup = new HashMap<>();
 
-        for(int i=0; i<5;i++) {
+        for (int i = 0; i < 5; i++) {
             try {
-                adxBuilder.withSymbol(symbol).execute().forEach(r->{
+                adxBuilder.withSymbol(symbol).execute().forEach(r -> {
                     dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
                     dataGroup.get(r.getDate()).setAdx(r.getData().get("ADX").asDouble());
                 });
-                macdBuilder.withSymbol(symbol).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setMacd(r.getData().get("MACD").asDouble());
-                    dataGroup.get(r.getDate()).setMacdHist(r.getData().get("MACD_Hist").asDouble());
-                    dataGroup.get(r.getDate()).setMacdSignal(r.getData().get("MACD_Signal").asDouble());
-                });
-
+//                macdBuilder.withSymbol(symbol).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setMacd(r.getData().get("MACD").asDouble());
+//                    dataGroup.get(r.getDate()).setMacdHist(r.getData().get("MACD_Hist").asDouble());
+//                    dataGroup.get(r.getDate()).setMacdSignal(r.getData().get("MACD_Signal").asDouble());
+//                });
+//
                 rsiBuilder.withSymbol(symbol).withTimePeriod(7).execute().forEach(r -> {
                     dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
                     dataGroup.get(r.getDate()).setRsi7(r.getData().get("RSI").asDouble());
                 });
+//
+//                rsiBuilder.withSymbol(symbol).withTimePeriod(14).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setRsi14(r.getData().get("RSI").asDouble());
+//                });
+//
+//                rsiBuilder.withSymbol(symbol).withTimePeriod(25).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setRsi25(r.getData().get("RSI").asDouble());
+//                });
+//
+//                cciBuilder.withSymbol(symbol).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setCci(r.getData().get("CCI").asDouble());
+//                });
 
-                rsiBuilder.withSymbol(symbol).withTimePeriod(14).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setRsi14(r.getData().get("RSI").asDouble());
-                });
-
-                rsiBuilder.withSymbol(symbol).withTimePeriod(25).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setRsi25(r.getData().get("RSI").asDouble());
-                });
-
-                cciBuilder.withSymbol(symbol).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setCci(r.getData().get("CCI").asDouble());
-                });
-
-                aroonBuilder.withSymbol(symbol).execute().forEach(r -> {
-                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
-                    dataGroup.get(r.getDate()).setAroonUp(r.getData().get("Aroon Up").asDouble());
-                    dataGroup.get(r.getDate()).setAroonDown(r.getData().get("Aroon Down").asDouble());
-                });
+//                aroonBuilder.withSymbol(symbol).execute().forEach(r -> {
+//                    dataGroup.computeIfAbsent(r.getDate(), k -> new DataStore());
+//                    dataGroup.get(r.getDate()).setAroonUp(r.getData().get("Aroon Up").asDouble());
+//                    dataGroup.get(r.getDate()).setAroonDown(r.getData().get("Aroon Down").asDouble());
+//                });
                 break;
-            }catch(Exception e) {
+            } catch (Exception e) {
                 System.err.println("Retry...");
             }
         }
 
         List<IndicatorDao> ret = new LinkedList<>();
 
-        dataGroup.entrySet().stream().sorted((e1,e2) -> e1.getKey().isBefore(e2.getKey()) ? 1 : -1)
-                .forEach(e->ret.add(new IndicatorDao(symbol, e.getKey(), e.getValue().getAdx(),
-                e.getValue().getMacd(), e.getValue().getMacdSignal(), e.getValue().getMacdHist(),
-                e.getValue().getRsi7(), e.getValue().getRsi14(), e.getValue().getRsi25(), e.getValue().getCci(),
-                e.getValue().getAroonUp(), e.getValue().getAroonDown())));
+        dataGroup.entrySet().stream().sorted((e1, e2) -> e1.getKey().isBefore(e2.getKey()) ? 1 : -1)
+                .forEach(e -> ret.add(new IndicatorDao(symbol, e.getKey(), e.getValue().getAdx(),
+                        e.getValue().getMacd(), e.getValue().getMacdSignal(), e.getValue().getMacdHist(),
+                        e.getValue().getRsi7(), e.getValue().getRsi14(), e.getValue().getRsi25(), e.getValue().getCci(),
+                        e.getValue().getAroonUp(), e.getValue().getAroonDown())));
 
         return ret;
     }
 }
-class DataStore{
+
+class DataStore {
     private double adx = -1;
     private double macd = -1;
     private double macdSignal = -1;
@@ -142,7 +146,8 @@ class DataStore{
     private double aroonDown = -1;
     private double rsi7 = -1;
 
-    public DataStore(){}
+    public DataStore() {
+    }
 
     public DataStore(double adx, double macd, double macdSignal, double macdHist, double rsi7, double rsi14, double rsi25, double cci, double aroonUp, double aroonDown) {
         this.adx = adx;

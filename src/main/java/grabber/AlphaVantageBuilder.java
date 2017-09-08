@@ -3,24 +3,21 @@ package grabber;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class AlphaVantageBuilder extends UrlHelper {
 
     static String baseUrl = "https://www.alphavantage.co/query?";
-    static String apikey = "apikey=72OFKJ7KN7414UCF";
+    static String[] apikey = new String[]{"72OFKJ7KN7414UCF", "5WU6E5TINP5EXE5Z", "FGHL7UTSRROFFA2E", "HCRYFNHBPJ2GONEI"};
+    static Random random = new Random();
+    static String apikey2 = "5WU6E5TINP5EXE5Z";
+    static String apikey3 = "FGHL7UTSRROFFA2E";
+    static String apikey4 = "HCRYFNHBPJ2GONEI";
 
     private List<Pair<String, String>> params = new LinkedList<>();
-
-    static {
-        System.setProperty("sun.net.client.defaultConnectTimeout", "30000");
-        System.setProperty("sun.net.client.defaultReadTimeout", "30000");
-    }
 
     public static void main(String[] args) {
         AlphaVantageBuilder builder = aBuilder()
@@ -55,7 +52,18 @@ public class AlphaVantageBuilder extends UrlHelper {
     }
 
     public AlphaVantageBuilder withInterval(AlphaVantageEnum.Interval interval) {
-        params.add(Pair.of("interval", interval.name().toLowerCase()));
+        if(interval== AlphaVantageEnum.Interval.ONE){
+            params.add(Pair.of("interval", "1min"));
+        }
+        if(interval== AlphaVantageEnum.Interval.FIVE){
+            params.add(Pair.of("interval", "5min"));
+        }
+        if(interval== AlphaVantageEnum.Interval.FIFTEEN){
+            params.add(Pair.of("interval", "15min"));
+        }
+        if(interval== AlphaVantageEnum.Interval.DAILY) {
+            params.add(Pair.of("interval", interval.name().toLowerCase()));
+        }
         return this;
     }
 
@@ -73,7 +81,7 @@ public class AlphaVantageBuilder extends UrlHelper {
         StringBuilder sb = new StringBuilder();
         sb.append(baseUrl);
         params.forEach(s -> sb.append(s.getKey() + "=" + s.getValue() + "&"));
-        sb.append(apikey);
+        sb.append("apikey=" + apikey[random.nextInt(apikey.length)]);
         return getResult(sb.toString(), 3);
     }
 
@@ -87,7 +95,8 @@ public class AlphaVantageBuilder extends UrlHelper {
         node.elements().forEachRemaining(list::add);
         List<Pair<DateTime, JsonNode>> dates = new ArrayList();
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
+        DateTimeFormatter formatter2 = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss");
 
         if (list.size() == 1) {
             if (retry > 0) {
@@ -104,7 +113,14 @@ public class AlphaVantageBuilder extends UrlHelper {
         }
 
         try {
-            list.get(1).fields().forEachRemaining(s -> dates.add(Pair.of(DateTime.parse(s.getKey().split(" ")[0]), s.getValue())));
+            list.get(1).fields().forEachRemaining(s -> {
+                if(s.getKey().length() < 12) {
+                    dates.add(Pair.of(DateTime.parse(s.getKey().split(" ")[0]), s.getValue()));
+                } else if(s.getKey().length()==16){
+                    dates.add(Pair.of(formatter.parseDateTime(s.getKey()), s.getValue()));
+                } else {
+                    dates.add(Pair.of(formatter2.parseDateTime(s.getKey()), s.getValue()));
+                }});
         } catch (Exception e) {
             System.err.println("Error: " + targetUrl);
         }
@@ -125,20 +141,3 @@ public class AlphaVantageBuilder extends UrlHelper {
 
 }
 
-class ResultData {
-    private DateTime date;
-    private HashMap<String, JsonNode> data;
-
-    public ResultData(DateTime date, HashMap<String, JsonNode> data) {
-        this.date = date;
-        this.data = data;
-    }
-
-    public DateTime getDate() {
-        return date;
-    }
-
-    public HashMap<String, JsonNode> getData() {
-        return data;
-    }
-}
