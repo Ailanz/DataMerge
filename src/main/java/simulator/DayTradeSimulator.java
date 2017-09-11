@@ -14,6 +14,7 @@ import ui.StockFilter;
 import util.TimeRange;
 
 import java.sql.Time;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,11 @@ import java.util.stream.Collectors;
  */
 public class DayTradeSimulator {
 
+    static Map<String, List<DayDataDao>> cachedDayData = new HashMap<>();
+    static{
+        List<DayDataDao> allData = DayDataDao.getAllDayData();
+        getDayDataMap(allData);
+    }
 
     public static void main(String args[]) throws InterruptedException {
         DateTime minDate = new DateTime(2017,9,5,0,0);
@@ -63,7 +69,7 @@ public class DayTradeSimulator {
     }
 
     public static synchronized List<DayDataDao> getData(StockDao stock, TimeRange timeRange, boolean forceReinsert){
-        List<DayDataDao> data = DayDataDao.getDayData(stock.getSymbol());
+        List<DayDataDao> data = cachedDayData.get(stock.getSymbol());
         if(data.size() > 0 && !forceReinsert){
             return data;
         }
@@ -81,6 +87,13 @@ public class DayTradeSimulator {
         SqliteDriver.executeInsert(builder.execute());
         System.out.println("Processed: " + stock.getSymbol());
         return data;
+    }
+
+    public static void getDayDataMap(List<DayDataDao> data){
+        data.forEach(s->{
+            cachedDayData.computeIfAbsent(s.getSymbol(), v-> new LinkedList<>());
+            cachedDayData.get(s.getSymbol()).add(s);
+        });
     }
 
 }
