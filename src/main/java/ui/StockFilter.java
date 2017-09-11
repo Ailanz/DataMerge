@@ -13,11 +13,12 @@ import java.util.List;
 public class StockFilter {
     public static List<StockDao> marketCapFilter(List<StockDao> stocks) {
         StockFilterBuilder builder = StockFilterBuilder.getInstance()
-                .withMinMarketCap(PriceUnit.toDouble(1000, PriceUnit.MILLION))
+                .withMinMarketCap(PriceUnit.toDouble(100, PriceUnit.MILLION))
                 .withStockExchange(NASDAQ.getInstance())
-                .withMaxSharePrice(20)
+//                .withMaxSharePrice(20)
+                .withPositiveMA(true)
 //                .withLowerThanTargetPrice(false)
-                .withAverageVolumeOver(50000);
+                .withAverageVolumeOver(5000);
         return builder.execute(stocks);
     }
 }

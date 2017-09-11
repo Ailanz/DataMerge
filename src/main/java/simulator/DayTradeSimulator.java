@@ -4,19 +4,19 @@ import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
 import algo.OptimizerMA;
 import core.*;
-import dao.StockDao;
-import dao.StockPriceDao;
-import grabber.AlphaVantageBuilder;
-import grabber.AlphaVantageEnum;
-import grabber.DailyPriceGrabber;
-import grabber.ResultData;
+import dao.*;
+import db.InsertionBuilder;
+import db.SqliteDriver;
+import grabber.*;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import ui.StockFilter;
 import util.TimeRange;
 
+import java.sql.Time;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,8 +29,9 @@ public class DayTradeSimulator {
 
 
     public static void main(String args[]) throws InterruptedException {
-        DateTime minDate = new DateTime(2017,9,6,0,0);
-        DateTime maxDate = new DateTime(2017,9,7,0,0);
+        DateTime minDate = new DateTime(2017,9,5,0,0);
+        DateTime maxDate = new DateTime(2017,9,6,0,0);
+        TimeRange timeRange = new TimeRange(minDate, maxDate);
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
         List<StockDao> allStocks = StockDao.getAllStocks();
@@ -38,15 +39,18 @@ public class DayTradeSimulator {
         Book book = new Book();
         for (StockDao stock : allStocks) {
             Runnable task = () -> {
-                Pair<Integer,Integer> lengths = OptimizerMA.optimizeEarnings(stock.getSymbol());
-                MovingAverage s = new ExponentialMovingAverage(lengths.getLeft());
-                MovingAverage l = new ExponentialMovingAverage(lengths.getRight());
+//                MovingAverageDao mv = stock.getMovingAverage();
+                List<DayDataDao> data = getData(stock, new TimeRange(DateTime.now().minusDays(200)), false);
+                if(data.size()==0) return;
+                MovingAverage s = new ExponentialMovingAverage(data.get(0).getShortMA());
+                MovingAverage l = new ExponentialMovingAverage(data.get(0).getLongMA());
+
                 List<TransactionRecord> transactions = DayStrategyBuilder.aBuilder()
                         .withBuyAfterDate(minDate)
-                        .withTimeRange(new TimeRange(minDate, maxDate))
+                        .withTimeRange(timeRange)
                         .withMovingAverages(s, l)
                         .withValueToFulfill(100)
-                        .execute(stock);
+                        .execute(data);
                 Accountant acct = new Accountant();
 
                 book.addTransaction(transactions);
@@ -56,6 +60,27 @@ public class DayTradeSimulator {
         pool.shutdown();
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         book.printSummary();
+    }
+
+    public static synchronized List<DayDataDao> getData(StockDao stock, TimeRange timeRange, boolean forceReinsert){
+        List<DayDataDao> data = DayDataDao.getDayData(stock.getSymbol());
+        if(data.size() > 0 && !forceReinsert){
+            return data;
+        }
+        List<StockPriceDao> prices = LivePrice.getDaysPrice(stock.getSymbol()).stream().filter(s->timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+        Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(stock.getSymbol());
+        InsertionBuilder builder = InsertionBuilder.aBuilder().withTableBuilder(DayDataDao.getTableBuilder());
+        for(int i=0; i < prices.size(); i++){
+            MovingAverageDao mv = stock.getMovingAverage();
+            double adx = indicators.get(prices.get(i).getDate()) == null ? -1 : indicators.get(prices.get(i).getDate()).getAdx();
+            DayDataDao day = new DayDataDao(stock.getSymbol(), prices.get(i).getDate(), prices.get(i).getClose(), adx,
+                    mv.getShortMA(), mv.getLongMA(), 0);
+            data.add(day);
+            builder.withParams(day.getParams());
+        }
+        SqliteDriver.executeInsert(builder.execute());
+        System.out.println("Processed: " + stock.getSymbol());
+        return data;
     }
 
 }

@@ -2,12 +2,14 @@ package core;
 
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
+import dao.DayDataDao;
 import dao.IndicatorDao;
 import dao.StockDao;
 import dao.StockPriceDao;
 import grabber.AlphaVantageEnum;
 import grabber.DailyIndicatorGrabber;
 import grabber.LivePrice;
+import jdk.management.resource.internal.inst.DatagramDispatcherRMHooks;
 import org.joda.time.DateTime;
 import util.TimeRange;
 
@@ -16,6 +18,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static grabber.AlphaVantageEnum.*;
 
 /**
  * Created by Ailan on 9/7/2017.
@@ -33,8 +37,8 @@ public class DayStrategyBuilder {
     }
 
     public static void main(String args[]) {
-        DateTime minDate = new DateTime(2017, 9, 6, 0, 0);
-        DateTime maxDate = new DateTime(2017, 9, 7, 0, 0);
+        DateTime minDate = new DateTime(2017, 9, 5, 0, 0);
+        DateTime maxDate = new DateTime(2017, 9, 6, 0, 0);
         TimeRange timeRange = new TimeRange(minDate, maxDate);
         MovingAverage s = new ExponentialMovingAverage(5);
         MovingAverage l = new ExponentialMovingAverage(13);
@@ -42,7 +46,7 @@ public class DayStrategyBuilder {
                 .withBuyAfterDate(minDate)
                 .withMovingAverages(s, l)
                 .withTimeRange(timeRange)
-                .execute(StockDao.getStock("NWSA"));
+                .execute(StockDao.getStock("HIW"));
         System.out.println(transactions);
     }
 
@@ -76,12 +80,9 @@ public class DayStrategyBuilder {
         return this;
     }
 
-    public boolean buyCondition(IndicatorDao indicator) {
-        if (indicator == null) {
-            return false;
-        }
+    public boolean buyCondition(DayDataDao data) {
 //        return true;
-        return indicator.getAdx() > 30;
+        return data.getAdx() > 30;
         // && indicator.getRsi7() < 60;
 //       && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
     }
@@ -91,13 +92,28 @@ public class DayStrategyBuilder {
     }
 
     public List<TransactionRecord> execute(StockDao stock, List<StockPriceDao> prices, Map<DateTime, IndicatorDao> indicators) {
+        List<DayDataDao> data = new LinkedList<>();
+        double lastAdx = -1;
+        for(int i=0; i < prices.size(); i++){
+            double adx = lastAdx;
+            IndicatorDao ind = indicators.get(prices.get(i).getDate());
+            if(ind!=null) {
+                adx =ind.getAdx();
+            }
+            data.add(new DayDataDao(stock.getSymbol(), prices.get(i).getDate(), prices.get(i).getClose(), adx,
+                    this.shortMA.getInterval(), this.longMA.getInterval(), 0));
+        }
+        return execute(data);
+    }
+
+    public List<TransactionRecord> execute(List<DayDataDao> data) {
         List<TransactionRecord> records = new LinkedList<>();
         try {
             if (timeRange != null) {
-                prices = prices.stream().filter(s -> timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+                data = data.stream().filter(s -> timeRange.isWithin(s.getDate())).collect(Collectors.toList());
             }
 
-            prices = prices.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
+            data = data.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
 
             double spread = 0.05;
             Boolean isShortOverLong = null;
@@ -105,14 +121,14 @@ public class DayStrategyBuilder {
             double holdingPrice = 0;
             int rep = 0;
 
-            for (StockPriceDao sp : prices) {
-                double price = sp.getClose();
+            for (DayDataDao sp : data) {
+                double price = sp.getPrice();
                 int numOfSharesToBuy = getNumSharesToBuy(price + spread);
-                DateTime curDate = sp.getDate();
                 shortMA.add(price);
+                DateTime curDate = sp.getDate();
+                DateTime eod = new DateTime(curDate.toString()).withHourOfDay(15).withMinuteOfHour(0);
                 longMA.add(price);
                 rep++;
-                IndicatorDao indicator = indicators.get(sp.getDate());
 
                 if (buyAfterDate == null || curDate.isAfter(buyAfterDate)) {
                     double shortAvg = shortMA.getAverage();
@@ -122,15 +138,21 @@ public class DayStrategyBuilder {
                         isShortOverLong = shortAvg > longAvg;
                     }
 
-                    if (holdingShares > 0 && price <= holdingPrice * (1 - maxLossPercent)) {
-                        records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), stock.getSymbol(), holdingShares, price - spread));
+                    //liquid EOD
+                    if (holdingShares > 0 && curDate.isAfter(eod)) {
+                        records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
                         holdingShares = 0;
                     }
 
-                    if (!isShortOverLong && shortAvg > longAvg && rep > longMA.getInterval()) {
-                        if (holdingShares == 0 && buyCondition(indicator)) {
+                    if (holdingShares > 0 && price <= holdingPrice * (1 - maxLossPercent)) {
+                        records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
+                        holdingShares = 0;
+                    }
+
+                    if (curDate.isBefore(eod) && !isShortOverLong && shortAvg > longAvg && rep > longMA.getInterval()) {
+                        if (holdingShares == 0 && buyCondition(sp)) {
                             records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()),
-                                    stock.getSymbol(), numOfSharesToBuy, price + spread));
+                                    sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;
                             holdingShares = numOfSharesToBuy;
                         }
@@ -139,7 +161,7 @@ public class DayStrategyBuilder {
 
                     if (isShortOverLong && longAvg > shortAvg) {
                         if (holdingShares > 0) {
-                            records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), stock.getSymbol(), holdingShares, price - spread));
+                            records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
                             holdingShares = 0;
                         }
                         isShortOverLong = false;
@@ -148,7 +170,7 @@ public class DayStrategyBuilder {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.err.println("Skipping: " + stock.getSymbol());
+            System.err.println("Skipping: " + data.get(0).getSymbol());
         }
         return records;
     }
@@ -162,7 +184,7 @@ public class DayStrategyBuilder {
     }
 
     public static Map<DateTime, IndicatorDao> getIndicatorMap(String symbol) {
-        List<IndicatorDao> indicators = DailyIndicatorGrabber.getIndicators(symbol, AlphaVantageEnum.Interval.FIVE, 7);
+        List<IndicatorDao> indicators = DailyIndicatorGrabber.getIndicators(symbol, Interval.FIVE, 7);
         Map<DateTime, IndicatorDao> map = new HashMap<>();
         indicators.forEach(i -> map.put(i.getDate(), i));
         return map;

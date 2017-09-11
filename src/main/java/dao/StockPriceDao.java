@@ -67,14 +67,14 @@ public class StockPriceDao implements AbstractDao {
         return stockPriceTableBuilder;
     }
 
-    public static List<StockPriceDao> getAllStockPrices(String symbol) {
+    public static synchronized List<StockPriceDao> getAllStockPrices(String symbol) {
         String query = String.format("select * from stockprice where symbol = '%s' order by DATE desc", symbol);
         List<StockPriceDao> stockPrices = new LinkedList<>();
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStockPrice(rs);
     }
 
-    public static List<StockPriceDao> getAllStockPrices() {
+    public static synchronized List<StockPriceDao> getAllStockPrices() {
         String query = "select * from stockprice order by DATE desc";
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseStockPrice(rs);

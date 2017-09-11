@@ -1,10 +1,7 @@
 package db;
 
 import algo.MovingAverage;
-import dao.IndicatorDao;
-import dao.MovingAverageDao;
-import dao.StockDao;
-import dao.StockPriceDao;
+import dao.*;
 import grabber.YahooFinanceBuilder;
 import grabber.YahooResult;
 import org.joda.time.DateTime;
@@ -40,7 +37,7 @@ public class SqliteDriver {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
 //        statement.execute("CREATE INDEX test_index ON stockprice (symbol, date);");
-        statement.execute(MovingAverageDao.getTableBuilder().generateQuery());
+        statement.execute(DayDataDao.getTableBuilder().generateQuery());
     }
 
     static void createTables() {
@@ -49,6 +46,7 @@ public class SqliteDriver {
             statement.execute(StockPriceDao.getTableBuilder().generateQuery());
             statement.execute(IndicatorDao.getTableBuilder().generateQuery());
             statement.execute(MovingAverageDao.getTableBuilder().generateQuery());
+            statement.execute(DayDataDao.getTableBuilder().generateQuery());
         } catch (SQLException e) {
 //            e.printStackTrace();
             System.out.println("Already exists.. moving on");

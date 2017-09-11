@@ -30,6 +30,7 @@ public class StockDao implements AbstractDao {
     double yearTargetPrice;
     private List<StockPriceDao> cachedPrices = null;
     private List<IndicatorDao> cachedIndicators = null;
+    private MovingAverageDao cachedMovingAverage = null;
 
     static TableBuilder stockTableBuilder = TableBuilder.aBuilder().withTableName("Stock")
             .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
@@ -159,6 +160,10 @@ public class StockDao implements AbstractDao {
         map.put("YR_TARGET_PRICE", String.valueOf(this.yearTargetPrice));
         map.put("UPDATED", DateTime.now().toString());
         return map;
+    }
+
+    public MovingAverageDao getMovingAverage() {
+        return this.cachedMovingAverage == null ? MovingAverageDao.getMovingAverage(this.symbol) : this.cachedMovingAverage;
     }
 
     public List<StockPriceDao> getPrices() {

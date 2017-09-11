@@ -1,5 +1,6 @@
 package util;
 
+import dao.MovingAverageDao;
 import dao.StockDao;
 import dao.StockPriceDao;
 import exchange.StockExchange;
@@ -19,6 +20,7 @@ public class StockFilterBuilder {
     private StockExchange stockExchange = null;
     private Boolean lowerThanTarget = null;
     private double maxSharePrice = Double.MAX_VALUE;
+    private boolean positiveMA = false;
 
     private StockFilterBuilder() {
     }
@@ -57,6 +59,11 @@ public class StockFilterBuilder {
         return this;
     }
 
+    public StockFilterBuilder withPositiveMA(boolean positiveMA) {
+        this.positiveMA = positiveMA;
+        return this;
+    }
+
     public List<StockDao> execute(List<StockDao> stocks) {
         return stocks.stream()
                 .filter(s -> s.getMarketCap() < maxMarketCap && s.getMarketCap() > minMarketCap)
@@ -64,9 +71,18 @@ public class StockFilterBuilder {
                 .filter(this::filterByTargetPrice)
                 .filter(this::filterAverageVolume)
                 .filter(s->s.getLatestPrice().getClose() < maxSharePrice)
+                .filter(this::filterByPositiveMovingAverageValue)
                 .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(5)))
                 .collect(Collectors.toList());
 
+    }
+
+    private boolean filterByPositiveMovingAverageValue(StockDao s) {
+        if(positiveMA) {
+            MovingAverageDao mv = s.getMovingAverage();
+            return mv != null && mv.getProfit() > 0;
+        }
+        return true;
     }
 
     private boolean filterByTargetPrice(StockDao s){

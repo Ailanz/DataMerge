@@ -59,30 +59,41 @@ public class Book {
         double totalExits = 0;
         double totalPurchase = 0;
         for (Map.Entry<String, List<TransactionRecord>> s : masterRecord.entrySet()) {
+            double leftOverCash = 0;
             List<TransactionRecord> records = s.getValue();
             Stack<TransactionRecord> stack = new Stack<>();
             double realized = 0;
             double unrealized = 0;
             for (TransactionRecord record : records) {
                 if (record.getType() == TransactionRecord.Type.BUY) {
-                    totalPurchase += record.getNumOfShare() * record.getPrice();
+                    double price = record.getNumOfShare() * record.getPrice();
+                    if(leftOverCash > price) {
+                        leftOverCash -= price;
+                    }else {
+                        totalPurchase += price;
+                    }
                     stack.push(record);
                     totalBuys++;
                 }
 
                 if (record.getType() == TransactionRecord.Type.SELL ) {
-                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                    double price = record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                    realized += price;
+                    leftOverCash += price;
                     totalSells++;
                 }
 
                 if (record.getType() == TransactionRecord.Type.EXIT){
-                    realized += record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                    double price = record.getNumOfShare() * (record.getPrice() - stack.pop().getPrice());
+                    realized += price;
+                    leftOverCash += price;
                     totalExits++;
                 }
             }
             while (!stack.isEmpty()) {
                 TransactionRecord r = stack.pop();
                 unrealized += r.getNumOfShare() * (StockDao.getStock(r.getSymbol()).getLatestPrice().getClose() - r.getPrice());
+                totalExits++;
             }
             totalRealized += realized;
             totalUnrealized += unrealized;
