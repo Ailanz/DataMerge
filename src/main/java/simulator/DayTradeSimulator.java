@@ -68,19 +68,22 @@ public class DayTradeSimulator {
         book.printSummary();
     }
 
-    public static synchronized List<DayDataDao> getData(StockDao stock, TimeRange timeRange, boolean forceReinsert){
+    public static List<DayDataDao> getData(StockDao stock, TimeRange timeRange, boolean forceReinsert){
         List<DayDataDao> data = cachedDayData.get(stock.getSymbol());
-        if(data.size() > 0 && !forceReinsert){
+        if(data!=null && data.size() > 0 && !forceReinsert){
             return data;
         }
-        List<StockPriceDao> prices = LivePrice.getDaysPrice(stock.getSymbol()).stream().filter(s->timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+        data = new LinkedList<>();
+        List<StockPriceDao> prices = LivePrice.getDaysPrice(stock.getSymbol()).stream()
+                .filter(s->timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+
         Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(stock.getSymbol());
         InsertionBuilder builder = InsertionBuilder.aBuilder().withTableBuilder(DayDataDao.getTableBuilder());
-        for(int i=0; i < prices.size(); i++){
+
+        for (StockPriceDao price : prices) {
             MovingAverageDao mv = stock.getMovingAverage();
-            double adx = indicators.get(prices.get(i).getDate()) == null ? -1 : indicators.get(prices.get(i).getDate()).getAdx();
-            DayDataDao day = new DayDataDao(stock.getSymbol(), prices.get(i).getDate(), prices.get(i).getClose(), adx,
-                    mv.getShortMA(), mv.getLongMA(), 0);
+            double adx = indicators.get(price.getDate()) == null ? -1 : indicators.get(price.getDate()).getAdx();
+            DayDataDao day = new DayDataDao(stock.getSymbol(), price.getDate(), price.getClose(), adx, mv.getShortMA(), mv.getLongMA(), 0);
             data.add(day);
             builder.withParams(day.getParams());
         }

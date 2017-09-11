@@ -163,15 +163,24 @@ public class StockDao implements AbstractDao {
     }
 
     public MovingAverageDao getMovingAverage() {
-        return this.cachedMovingAverage == null ? MovingAverageDao.getMovingAverage(this.symbol) : this.cachedMovingAverage;
+        if(this.cachedMovingAverage == null) {
+            this.cachedMovingAverage = MovingAverageDao.getMovingAverage(this.symbol);
+        }
+        return this.cachedMovingAverage ;
     }
 
     public List<StockPriceDao> getPrices() {
-        return this.cachedPrices == null ? StockPriceDao.getAllStockPrices(this.symbol) : this.cachedPrices;
+        if(this.cachedPrices == null ) {
+            this.cachedPrices = StockPriceDao.getAllStockPrices(this.symbol);
+        }
+        return this.cachedPrices;
     }
 
     public List<IndicatorDao> getIndicators() {
-        return this.cachedIndicators == null ? IndicatorDao.getAllIndicators(this.symbol) : this.cachedIndicators;
+        if(this.cachedIndicators==null) {
+            this.cachedIndicators = IndicatorDao.getAllIndicators(this.symbol);
+        }
+        return this.cachedIndicators;
     }
 
     public StockPriceDao getLatestPrice() {

@@ -150,7 +150,7 @@ public class DayStrategyBuilder {
                     }
 
                     if (curDate.isBefore(eod) && !isShortOverLong && shortAvg > longAvg && rep > longMA.getInterval()) {
-                        if (holdingShares == 0 && buyCondition(sp)) {
+                        if (holdingShares == 0 && buyCondition(sp) && holdingPrice <= price - spread) {
                             records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()),
                                     sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;

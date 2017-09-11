@@ -37,6 +37,8 @@ public class SqliteDriver {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
 //        statement.execute("CREATE INDEX test_index ON stockprice (symbol, date);");
+//        statement.execute("Drop Table MovingAverage");
+//        statement.execute(MovingAverageDao.getTableBuilder().generateQuery());
         statement.execute(DayDataDao.getTableBuilder().generateQuery());
     }
 
@@ -69,7 +71,7 @@ public class SqliteDriver {
     }
 
 
-    public static ResultSet executeQuery(String query) {
+    public static synchronized ResultSet executeQuery(String query) {
         try {
             return statement.executeQuery(query);
         } catch (SQLException e) {
@@ -78,7 +80,7 @@ public class SqliteDriver {
         return null;
     }
 
-    public static void executeInsert(String query) {
+    public static synchronized void executeInsert(String query) {
         try {
             statement.executeUpdate(query);
         } catch (SQLException e) {
