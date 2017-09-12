@@ -15,9 +15,9 @@ public class StockFilter {
         StockFilterBuilder builder = StockFilterBuilder.getInstance()
                 .withMinMarketCap(PriceUnit.toDouble(100, PriceUnit.MILLION))
                 .withStockExchange(NASDAQ.getInstance())
-//                .withMaxSharePrice(20)
+                .withMaxSharePrice(50)
                 .withPositiveMA(true)
-//                .withLowerThanTargetPrice(false)
+                .withLowerThanTargetPrice(false)
                 .withAverageVolumeOver(5000);
         return builder.execute(stocks);
     }

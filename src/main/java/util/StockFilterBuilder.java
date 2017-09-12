@@ -72,7 +72,7 @@ public class StockFilterBuilder {
                 .filter(this::filterAverageVolume)
                 .filter(s->s.getLatestPrice().getClose() < maxSharePrice)
                 .filter(this::filterByPositiveMovingAverageValue)
-                .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(5)))
+                .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(15)))
                 .collect(Collectors.toList());
 
     }

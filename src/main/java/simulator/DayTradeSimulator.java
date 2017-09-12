@@ -2,18 +2,17 @@ package simulator;
 
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
-import algo.OptimizerMA;
-import core.*;
+import core.Book;
+import core.DayStrategyBuilder;
+import core.TransactionRecord;
 import dao.*;
 import db.InsertionBuilder;
 import db.SqliteDriver;
-import grabber.*;
-import org.apache.commons.lang3.tuple.Pair;
+import grabber.LivePrice;
 import org.joda.time.DateTime;
 import ui.StockFilter;
 import util.TimeRange;
 
-import java.sql.Time;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,14 +28,15 @@ import java.util.stream.Collectors;
 public class DayTradeSimulator {
 
     static Map<String, List<DayDataDao>> cachedDayData = new HashMap<>();
-    static{
+
+    static {
         List<DayDataDao> allData = DayDataDao.getAllDayData();
         getDayDataMap(allData);
     }
 
     public static void main(String args[]) throws InterruptedException {
-        DateTime minDate = new DateTime(2017,9,5,0,0);
-        DateTime maxDate = new DateTime(2017,9,6,0,0);
+        DateTime minDate = new DateTime(2017, 9, 5, 0, 0);
+        DateTime maxDate = new DateTime(2017, 9, 6, 0, 0);
         TimeRange timeRange = new TimeRange(minDate, maxDate);
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
@@ -45,9 +45,8 @@ public class DayTradeSimulator {
         Book book = new Book();
         for (StockDao stock : allStocks) {
             Runnable task = () -> {
-//                MovingAverageDao mv = stock.getMovingAverage();
-                List<DayDataDao> data = getData(stock, new TimeRange(DateTime.now().minusDays(200)), false);
-                if(data.size()==0) return;
+                List<DayDataDao> data = getData(stock, new TimeRange(DateTime.now().minusDays(200)), timeRange, false);
+                if (data.size() == 0) return;
                 MovingAverage s = new ExponentialMovingAverage(data.get(0).getShortMA());
                 MovingAverage l = new ExponentialMovingAverage(data.get(0).getLongMA());
 
@@ -55,9 +54,9 @@ public class DayTradeSimulator {
                         .withBuyAfterDate(minDate)
                         .withTimeRange(timeRange)
                         .withMovingAverages(s, l)
-                        .withValueToFulfill(100)
+//                        .withSellHigher(true)
+//                        .withValueToFulfill(100)
                         .execute(data);
-                Accountant acct = new Accountant();
 
                 book.addTransaction(transactions);
             };
@@ -65,17 +64,24 @@ public class DayTradeSimulator {
         }
         pool.shutdown();
         pool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
-        book.printSummary();
+        book.printSummaryTemporal();
     }
 
-    public static List<DayDataDao> getData(StockDao stock, TimeRange timeRange, boolean forceReinsert){
-        List<DayDataDao> data = cachedDayData.get(stock.getSymbol());
-        if(data!=null && data.size() > 0 && !forceReinsert){
+    public static List<DayDataDao> getData(StockDao stock, TimeRange dataRange, TimeRange filterRange, boolean forceReinsert) {
+        List<DayDataDao> data = cachedDayData.computeIfAbsent(stock.getSymbol(), v -> new LinkedList<>());
+        data = data.stream().filter(d -> filterRange.isWithin(d.getDate())).collect(Collectors.toList());
+        if (data != null && data.size() > 0 && !forceReinsert) {
             return data;
         }
-        data = new LinkedList<>();
+
+        constructAndInsertDayData(stock, dataRange, data);
+        System.out.println("Processed: " + stock.getSymbol());
+        return data;
+    }
+
+    private static void constructAndInsertDayData(StockDao stock, TimeRange dataRange, List<DayDataDao> data) {
         List<StockPriceDao> prices = LivePrice.getDaysPrice(stock.getSymbol()).stream()
-                .filter(s->timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+                .filter(s -> dataRange.isWithin(s.getDate())).collect(Collectors.toList());
 
         Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(stock.getSymbol());
         InsertionBuilder builder = InsertionBuilder.aBuilder().withTableBuilder(DayDataDao.getTableBuilder());
@@ -88,13 +94,11 @@ public class DayTradeSimulator {
             builder.withParams(day.getParams());
         }
         SqliteDriver.executeInsert(builder.execute());
-        System.out.println("Processed: " + stock.getSymbol());
-        return data;
     }
 
-    public static void getDayDataMap(List<DayDataDao> data){
-        data.forEach(s->{
-            cachedDayData.computeIfAbsent(s.getSymbol(), v-> new LinkedList<>());
+    public static void getDayDataMap(List<DayDataDao> data) {
+        data.forEach(s -> {
+            cachedDayData.computeIfAbsent(s.getSymbol(), v -> new LinkedList<>());
             cachedDayData.get(s.getSymbol()).add(s);
         });
     }

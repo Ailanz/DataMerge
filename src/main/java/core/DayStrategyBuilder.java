@@ -32,6 +32,7 @@ public class DayStrategyBuilder {
     private TimeRange timeRange;
     private DateTime buyAfterDate;
     private double valueToFulfill;
+    private boolean sellLHigher = false;
 
     private DayStrategyBuilder() {
     }
@@ -80,9 +81,14 @@ public class DayStrategyBuilder {
         return this;
     }
 
-    public boolean buyCondition(DayDataDao data) {
+    public DayStrategyBuilder withSellHigher(boolean sellHigher) {
+        this.sellLHigher = sellHigher;
+        return this;
+    }
+
+    public boolean buyCondition(DayDataDao data, DateTime eod) {
 //        return true;
-        return data.getAdx() > 30;
+        return data.getAdx() > 30 && data.getDate().isBefore(eod);
         // && indicator.getRsi7() < 60;
 //       && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
     }
@@ -149,10 +155,9 @@ public class DayStrategyBuilder {
                         holdingShares = 0;
                     }
 
-                    if (curDate.isBefore(eod) && !isShortOverLong && shortAvg > longAvg && rep > longMA.getInterval()) {
-                        if (holdingShares == 0 && buyCondition(sp) && holdingPrice <= price - spread) {
-                            records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()),
-                                    sp.getSymbol(), numOfSharesToBuy, price + spread));
+                    if (!isShortOverLong && shortAvg > longAvg && rep > longMA.getInterval()) {
+                        if (holdingShares == 0 && buyCondition(sp, eod)) {
+                            records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;
                             holdingShares = numOfSharesToBuy;
                         }
@@ -160,7 +165,7 @@ public class DayStrategyBuilder {
                     }
 
                     if (isShortOverLong && longAvg > shortAvg) {
-                        if (holdingShares > 0) {
+                        if (holdingShares > 0 && sellCondition(holdingPrice, price, spread)) {
                             records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
                             holdingShares = 0;
                         }
@@ -173,6 +178,13 @@ public class DayStrategyBuilder {
             System.err.println("Skipping: " + data.get(0).getSymbol());
         }
         return records;
+    }
+
+    private boolean sellCondition(double boughtPrice, double currentPrice, double spread){
+        if(sellLHigher) {
+            return boughtPrice < currentPrice - spread;
+        }
+        return true;
     }
 
     private int getNumSharesToBuy(double price) {

@@ -3,16 +3,19 @@ package core;
 import dao.StockDao;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by Ailan on 9/6/2017.
  */
 public class Book {
     Map<String, List<TransactionRecord>> masterRecord = new HashMap<>();
+    List<TransactionRecord> masterList = new LinkedList<>();
 
     public void addTransaction(TransactionRecord record) {
         masterRecord.computeIfAbsent(record.getSymbol(), s -> new LinkedList<>());
         masterRecord.get(record.getSymbol()).add(record);
+        masterList.add(record);
     }
 
     public synchronized void addTransaction(List<TransactionRecord> records) {
@@ -49,6 +52,59 @@ public class Book {
         }
         //STOCK GET LATEST PRICE IS WRONG, NEED REAL TIME API TO GET IT RIGHT!
       return totalRealized + totalUnrealized;
+    }
+
+    public void printSummaryTemporal() {
+        double totalRealized = 0;
+        double totalUnrealized = 0;
+        double totalBuys = 0;
+        double totalSells = 0;
+        double totalExits = 0;
+        double totalPurchase = 0;
+
+        double reusableCash = 0;
+        Map<String, Double> holdings = new HashMap<>();
+        List<TransactionRecord> records =  masterList.stream().sorted(Comparator.comparing(TransactionRecord::getDate)).collect(Collectors.toList());
+
+        for(TransactionRecord r : records) {
+            if (r.getType() == TransactionRecord.Type.BUY) {
+                double price = r.getNumOfShare() * r.getPrice();
+                holdings.put(r.getSymbol(), price);
+
+                if(reusableCash >= price) {
+                    reusableCash -= price;
+                }else {
+                    totalPurchase += price;
+                }
+                totalBuys++;
+            }
+
+            if (r.getType() == TransactionRecord.Type.SELL ) {
+                if(holdings.get(r.getSymbol())==null) {
+                    throw new RuntimeException("ERR");
+                }
+                double profit = (r.getPrice()* r.getNumOfShare()) - (holdings.get(r.getSymbol()));
+                totalRealized += profit;
+                reusableCash += (r.getPrice()* r.getNumOfShare());
+                holdings.put(r.getSymbol(), 0d);
+                totalSells++;
+            }
+
+            if (r.getType() == TransactionRecord.Type.EXIT){
+                double profit = (r.getPrice()* r.getNumOfShare()) - (holdings.get(r.getSymbol()));
+                totalRealized += profit;
+                reusableCash += profit;
+                holdings.put(r.getSymbol(), 0d);
+                totalExits++;
+            }
+        }
+
+        System.out.println("--------------------------------------------------");
+        System.out.println("Total Spent: " + totalPurchase);
+        System.out.println(String.format("Total Buys: %s, Sells: %s, Exits: %s", String.valueOf(totalBuys),String.valueOf(totalSells),String.valueOf(totalExits)));
+        System.out.println(String.format("Total Realized: %s, Unrealized: %s", String.valueOf(totalRealized), String.valueOf(totalUnrealized)));
+        System.out.println(String.format("Return: %s",String.valueOf(1 + (totalRealized + totalUnrealized)/totalPurchase)));
+
     }
 
     public void printSummary() {
