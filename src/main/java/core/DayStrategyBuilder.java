@@ -26,15 +26,15 @@ import static grabber.AlphaVantageEnum.*;
  * OMG SO MUCH DUPLICATED CODE FROM STRATEGY BUILDER
  */
 public class DayStrategyBuilder {
-    private double maxLossPercent = 0.1;
-    private MovingAverage shortMA;
-    private MovingAverage longMA;
-    private TimeRange timeRange;
-    private DateTime buyAfterDate;
-    private double valueToFulfill;
-    private boolean sellLHigher = false;
+    protected double maxLossPercent = 0.1;
+    protected MovingAverage shortMA;
+    protected MovingAverage longMA;
+    protected TimeRange timeRange;
+    protected DateTime buyAfterDate;
+    protected double valueToFulfill;
+    protected boolean sellLHigher = false;
 
-    private DayStrategyBuilder() {
+    protected DayStrategyBuilder() {
     }
 
     public static void main(String args[]) {
@@ -106,8 +106,9 @@ public class DayStrategyBuilder {
             if(ind!=null) {
                 adx =ind.getAdx();
             }
-            data.add(new DayDataDao(stock.getSymbol(), prices.get(i).getDate(), prices.get(i).getClose(), adx,
-                    this.shortMA.getInterval(), this.longMA.getInterval(), 0));
+            StockPriceDao sp = prices.get(i);
+            data.add(new DayDataDao(stock.getSymbol(), sp.getDate(), sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getVolume(),
+                    adx, this.shortMA.getInterval(), this.longMA.getInterval(), 0));
         }
         return execute(data);
     }
@@ -128,7 +129,7 @@ public class DayStrategyBuilder {
             int rep = 0;
 
             for (DayDataDao sp : data) {
-                double price = sp.getPrice();
+                double price = sp.getClose();
                 int numOfSharesToBuy = getNumSharesToBuy(price + spread);
                 shortMA.add(price);
                 DateTime curDate = sp.getDate();
@@ -180,14 +181,14 @@ public class DayStrategyBuilder {
         return records;
     }
 
-    private boolean sellCondition(double boughtPrice, double currentPrice, double spread){
+    protected boolean sellCondition(double boughtPrice, double currentPrice, double spread){
         if(sellLHigher) {
             return boughtPrice < currentPrice - spread;
         }
         return true;
     }
 
-    private int getNumSharesToBuy(double price) {
+    protected int getNumSharesToBuy(double price) {
         if (valueToFulfill == 0) {
             return 1;
         } else {

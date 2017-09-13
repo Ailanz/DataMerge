@@ -19,17 +19,25 @@ public class DayDataDao implements AbstractDao {
     static TableBuilder tableBuilder = TableBuilder.aBuilder().withTableName("DayData")
             .withColumn("SYMBOL", TableBuilder.FIELD_TYPE.TEXT)
             .withColumn("DATE", TableBuilder.FIELD_TYPE.TEXT)
-            .withColumn("PRICE", TableBuilder.FIELD_TYPE.NUMERIC)
+            .withColumn("OPEN", TableBuilder.FIELD_TYPE.NUMERIC)
+            .withColumn("CLOSE", TableBuilder.FIELD_TYPE.NUMERIC)
+            .withColumn("HIGH", TableBuilder.FIELD_TYPE.NUMERIC)
+            .withColumn("LOW", TableBuilder.FIELD_TYPE.NUMERIC)
+            .withColumn("VOLUME", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("ADX", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("SHORT_MA", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("LONG_MA", TableBuilder.FIELD_TYPE.NUMERIC)
             .withColumn("PROFIT", TableBuilder.FIELD_TYPE.NUMERIC)
             .withprimaryKeys("SYMBOL", "DATE");
 
-    public DayDataDao(String symbol, DateTime date, double price, double adx, int shortMA, int longMA, double profit) {
+    public DayDataDao(String symbol, DateTime date, double open, double close, double high, double low, double volume, double adx, int shortMA, int longMA, double profit) {
         this.symbol = symbol;
         this.date = date;
-        this.price = price;
+        this.open = open;
+        this.close = close;
+        this.high = high;
+        this.low = low;
+        this.volume = volume;
         this.adx = adx;
         this.shortMA = shortMA;
         this.longMA = longMA;
@@ -38,12 +46,17 @@ public class DayDataDao implements AbstractDao {
 
     private String symbol;
     private DateTime date;
-    private double price;
+    private double open;
+    private double close;
+    private double high;
+    private double low;
+    private double volume;
     private double adx;
+
     private int shortMA;
+
     private int longMA;
     private double profit;
-
     public static TableBuilder getTableBuilder() {
         return tableBuilder;
     }
@@ -56,8 +69,8 @@ public class DayDataDao implements AbstractDao {
         return date;
     }
 
-    public double getPrice() {
-        return price;
+    public double getOpen() {
+        return open;
     }
 
     public double getAdx() {
@@ -81,7 +94,8 @@ public class DayDataDao implements AbstractDao {
         try {
             while (rs.next()) {
                 DayDataDao ind = new DayDataDao(rs.getString("SYMBOL"), DateTime.parse(rs.getString("DATE")),
-                        rs.getDouble("PRICE"), rs.getDouble("ADX"), rs.getInt("SHORT_MA"),
+                        rs.getDouble("OPEN"),rs.getDouble("CLOSE"),rs.getDouble("HIGH"),rs.getDouble("LOW"),
+                        rs.getDouble("VOLUME"), rs.getDouble("ADX"), rs.getInt("SHORT_MA"),
                         rs.getInt("LONG_MA"), rs.getDouble("PROFIT"));
                 dayData.add(ind);
             }
@@ -107,12 +121,32 @@ public class DayDataDao implements AbstractDao {
         SqliteDriver.executeInsert(InsertionBuilder.aBuilder().withTableBuilder(getTableBuilder()).withParams(getParams()).execute());
     }
 
+    public double getClose() {
+        return close;
+    }
+
+    public double getHigh() {
+        return high;
+    }
+
+    public double getLow() {
+        return low;
+    }
+
+    public double getVolume() {
+        return volume;
+    }
+
         @Override
     public Map<String, String> getParams() {
         HashMap<String, String> map = new HashMap<>();
         map.put("SYMBOL", this.symbol);
         map.put("DATE", this.date.toString());
-        map.put("PRICE", String.valueOf(this.price));
+        map.put("OPEN", String.valueOf(this.open));
+        map.put("CLOSE", String.valueOf(this.close));
+        map.put("HIGH", String.valueOf(this.high));
+        map.put("LOW", String.valueOf(this.low));
+        map.put("VOLUME", String.valueOf(this.volume));
         map.put("ADX", String.valueOf(this.adx));
         map.put("SHORT_MA", String.valueOf(this.shortMA));
         map.put("LONG_MA", String.valueOf(this.longMA));

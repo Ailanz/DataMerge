@@ -3,6 +3,7 @@ package simulator;
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
 import core.Book;
+import core.CandleStickStrategyBuilder;
 import core.DayStrategyBuilder;
 import core.TransactionRecord;
 import dao.*;
@@ -50,7 +51,7 @@ public class DayTradeSimulator {
                 MovingAverage s = new ExponentialMovingAverage(data.get(0).getShortMA());
                 MovingAverage l = new ExponentialMovingAverage(data.get(0).getLongMA());
 
-                List<TransactionRecord> transactions = DayStrategyBuilder.aBuilder()
+                List<TransactionRecord> transactions = CandleStickStrategyBuilder.aBuilder()
                         .withBuyAfterDate(minDate)
                         .withTimeRange(timeRange)
                         .withMovingAverages(s, l)
@@ -89,7 +90,8 @@ public class DayTradeSimulator {
         for (StockPriceDao price : prices) {
             MovingAverageDao mv = stock.getMovingAverage();
             double adx = indicators.get(price.getDate()) == null ? -1 : indicators.get(price.getDate()).getAdx();
-            DayDataDao day = new DayDataDao(stock.getSymbol(), price.getDate(), price.getClose(), adx, mv.getShortMA(), mv.getLongMA(), 0);
+            DayDataDao day = new DayDataDao(stock.getSymbol(), price.getDate(), price.getOpen(), price.getClose(), price.getHigh(),
+                    price.getLow(), price.getVolume(), adx, mv.getShortMA(), mv.getLongMA(), 0);
             data.add(day);
             builder.withParams(day.getParams());
         }
