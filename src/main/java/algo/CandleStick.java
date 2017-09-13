@@ -49,4 +49,12 @@ public class CandleStick {
     public boolean isWhite(){
         return close > open;
     }
+
+    public double getBodyLength(){
+        return  Math.abs(open - close);
+    }
+
+    public boolean isBlack(){
+        return open > close;
+    }
 }

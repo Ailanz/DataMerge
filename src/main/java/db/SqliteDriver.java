@@ -37,7 +37,7 @@ public class SqliteDriver {
 //        List<StockPriceDao> prices = getAllStockPrices("ANX.to");
 //        List<StockPriceDao> prices = getAllStockPrices();
 //        statement.execute("CREATE INDEX test_index ON stockprice (symbol, date);");
-//        statement.execute("Drop Table MovingAverage");
+//        statement.execute("Drop Table DayData");
 //        statement.execute(MovingAverageDao.getTableBuilder().generateQuery());
         statement.execute(DayDataDao.getTableBuilder().generateQuery());
     }

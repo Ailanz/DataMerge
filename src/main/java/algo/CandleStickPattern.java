@@ -25,7 +25,28 @@ public class CandleStickPattern {
         }
     }
 
+    public boolean isBearishEngulfing(){
+        //Bearish
+        if(data.size() < 2) {
+            return false;
+        }
+        CandleStick bull = data.get(data.size() - 2);
+        CandleStick bear = data.get(data.size() - 1);
+        return bear.isBlack() && bull.isWhite() && bull.getOpen() > bear.getClose() && bull.getClose() < bear.getOpen();
+    }
+
+    public boolean isBullishEngulfing(){
+        //Bullish
+        if(data.size() < 2) {
+            return false;
+        }
+        CandleStick bear = data.get(data.size() - 2);
+        CandleStick bull = data.get(data.size() - 1);
+        return bear.isBlack() && bull.isWhite() && bull.getOpen() < bear.getClose() && bull.getClose() > bear.getOpen();
+    }
+
     public boolean isThreeLineStrikes() {
+        //Bullish
         if (data.size() < 4) {
             return false;
         }
@@ -35,7 +56,7 @@ public class CandleStickPattern {
         CandleStick blackBar3 = data.get(data.size() - 2);
         CandleStick longWhiteBar = data.get(data.size() - 1);
 
-        return !blackBar1.isWhite() && !blackBar2.isWhite() && !blackBar3.isWhite()
+        return blackBar1.isBlack() && blackBar2.isBlack() && blackBar3.isBlack()
                 && blackBar1.getClose() > blackBar2.getClose() && blackBar2.getClose() > blackBar3.getClose()
                 && longWhiteBar.isWhite() && longWhiteBar.getOpen() < blackBar3.getClose()
                 && longWhiteBar.getClose() > blackBar1.getOpen();

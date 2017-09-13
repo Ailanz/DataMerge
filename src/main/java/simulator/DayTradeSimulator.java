@@ -36,8 +36,8 @@ public class DayTradeSimulator {
     }
 
     public static void main(String args[]) throws InterruptedException {
-        DateTime minDate = new DateTime(2017, 9, 5, 0, 0);
-        DateTime maxDate = new DateTime(2017, 9, 6, 0, 0);
+        DateTime minDate = new DateTime(2017, 9, 7, 0, 0);
+        DateTime maxDate = new DateTime(2017, 9, 8, 0, 0);
         TimeRange timeRange = new TimeRange(minDate, maxDate);
         ExecutorService pool = Executors.newFixedThreadPool(100);
 
@@ -56,7 +56,7 @@ public class DayTradeSimulator {
                         .withTimeRange(timeRange)
                         .withMovingAverages(s, l)
 //                        .withSellHigher(true)
-//                        .withValueToFulfill(100)
+                        .withValueToFulfill(100)
                         .execute(data);
 
                 book.addTransaction(transactions);
