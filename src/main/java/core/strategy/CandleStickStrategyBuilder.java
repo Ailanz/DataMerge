@@ -1,8 +1,9 @@
-package core;
+package core.strategy;
 
 import algo.CandleStick;
 import algo.CandleStickPattern;
 import algo.MovingAverage;
+import core.TransactionRecord;
 import dao.DayDataDao;
 import org.joda.time.DateTime;
 import util.TimeRange;
@@ -14,64 +15,22 @@ import java.util.stream.Collectors;
 /**
  * Created by Ailan on 9/12/2017.
  */
-public class CandleStickStrategyBuilder extends DayStrategyBuilder{
+public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrategyBuilder>{
     protected  CandleStickStrategyBuilder(){}
 
     public static CandleStickStrategyBuilder aBuilder() {
         return new CandleStickStrategyBuilder();
     }
 
-
-    @Override
-    public CandleStickStrategyBuilder withMaxLoss(double maxLoss) {
-        super.withMaxLoss(maxLoss);
-        return this;
-    }
-
-    @Override
-    public CandleStickStrategyBuilder withMovingAverages(MovingAverage s, MovingAverage l) {
-        super.withMovingAverages(s, l);
-        return this;
-
-    }
-
-    @Override
-    public CandleStickStrategyBuilder withTimeRange(TimeRange range) {
-        super.withTimeRange(range);
-        return this;
-
-    }
-
-    @Override
-    public CandleStickStrategyBuilder withBuyAfterDate(DateTime buyAfter) {
-        super.withBuyAfterDate(buyAfter);
-        return this;
-    }
-
-    @Override
-    public CandleStickStrategyBuilder withValueToFulfill(double valueToFulfill) {
-        super.withValueToFulfill(valueToFulfill);
-        return this;
-    }
-
-    @Override
-    public CandleStickStrategyBuilder withSellHigher(boolean sellHigher) {
-        super.withSellHigher(sellHigher);
-        return this;
-
-    }
-
-    @Override
     public boolean buyCondition(DayDataDao data, DateTime eod) {
         return data.getDate().isBefore(eod);
     }
 
-    @Override
     public List<TransactionRecord> execute(List<DayDataDao> data) {
         List<TransactionRecord> records = new LinkedList<>();
         try {
-            if (super.timeRange != null) {
-                data = data.stream().filter(s -> timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+            if (getTimeRange() != null) {
+                data = data.stream().filter(s -> getTimeRange().isWithin(s.getDate())).collect(Collectors.toList());
             }
 
             data = data.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
@@ -91,19 +50,19 @@ public class CandleStickStrategyBuilder extends DayStrategyBuilder{
                 DateTime curDate = sp.getDate();
                 DateTime eod = new DateTime(curDate.toString()).withHourOfDay(15).withMinuteOfHour(0);
 //                CandleStick stick = new CandleStick(sp.getOp)
-                if (buyAfterDate == null || curDate.isAfter(buyAfterDate)) {
+                if (getBuyAfterDate() == null || curDate.isAfter(getBuyAfterDate())) {
 
                     if (holdingShares > 0 && curDate.isAfter(eod)) {
                         records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
                         holdingShares = 0;
                     }
 
-//                    if(holdingShares > 0 && ( pattern.isBearishEngulfing())) {
+                    if(holdingShares > 0 && ( pattern.isBearishEngulfing())) {
 //                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
 //                        holdingShares = 0;
-//                    }
+                    }
 
-                    if (pattern.isBullishEngulfing()) {
+                    if (pattern.isThreeLineStrikes()) {
                         if (holdingShares == 0 && buyCondition(sp, eod)) {
                             records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;

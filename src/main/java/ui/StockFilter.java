@@ -2,6 +2,7 @@ package ui;
 
 import dao.StockDao;
 import exchange.NASDAQ;
+import exchange.SP500;
 import util.PriceUnit;
 import util.StockFilterBuilder;
 
@@ -14,8 +15,8 @@ public class StockFilter {
     public static List<StockDao> marketCapFilter(List<StockDao> stocks) {
         StockFilterBuilder builder = StockFilterBuilder.getInstance()
                 .withMinMarketCap(PriceUnit.toDouble(100, PriceUnit.MILLION))
-                .withStockExchange(NASDAQ.getInstance())
-                .withMaxSharePrice(50)
+                .withStockExchange(SP500.getInstance())
+//                .withMaxSharePrice(50)
 //                .withPositiveMA(true)
 //                .withLowerThanTargetPrice(false)
                 .withAverageVolumeOver(5000);

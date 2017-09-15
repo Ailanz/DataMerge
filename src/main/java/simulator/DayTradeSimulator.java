@@ -3,8 +3,8 @@ package simulator;
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
 import core.Book;
-import core.CandleStickStrategyBuilder;
-import core.DayStrategyBuilder;
+import core.strategy.CandleStickStrategyBuilder;
+import core.strategy.DayStrategyBuilder;
 import core.TransactionRecord;
 import dao.*;
 import db.InsertionBuilder;
@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+//ZjksXwDUZ-xqy18TZM0ivt9ky7pZDv_T0
 
 /**
  * Created by Ailan on 9/7/2017.
@@ -36,10 +37,11 @@ public class DayTradeSimulator {
     }
 
     public static void main(String args[]) throws InterruptedException {
-        DateTime minDate = new DateTime(2017, 9, 7, 0, 0);
-        DateTime maxDate = new DateTime(2017, 9, 8, 0, 0);
+        int date = 13 ;
+        DateTime minDate = new DateTime(2017, 9, date, 0, 0);
+        DateTime maxDate = new DateTime(2017, 9, date+1, 0, 0);
         TimeRange timeRange = new TimeRange(minDate, maxDate);
-        ExecutorService pool = Executors.newFixedThreadPool(100);
+        ExecutorService pool = Executors.newFixedThreadPool(20);
 
         List<StockDao> allStocks = StockDao.getAllStocks();
         allStocks = StockFilter.marketCapFilter(allStocks);
@@ -56,7 +58,7 @@ public class DayTradeSimulator {
                         .withTimeRange(timeRange)
                         .withMovingAverages(s, l)
 //                        .withSellHigher(true)
-                        .withValueToFulfill(100)
+                        .withValueToFulfill(200)
                         .execute(data);
 
                 book.addTransaction(transactions);

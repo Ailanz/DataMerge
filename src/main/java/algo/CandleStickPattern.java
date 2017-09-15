@@ -20,7 +20,7 @@ public class CandleStickPattern {
 
     public void addCandleStick(CandleStick stick) {
         data.add(stick);
-        while (data.size() > window) {
+        if(data.size() > window) {
             data.remove(0);
         }
     }

@@ -1,15 +1,14 @@
-package core;
+package core.strategy;
 
 import algo.ExponentialMovingAverage;
 import algo.MovingAverage;
+import core.TransactionRecord;
 import dao.DayDataDao;
 import dao.IndicatorDao;
 import dao.StockDao;
 import dao.StockPriceDao;
-import grabber.AlphaVantageEnum;
 import grabber.DailyIndicatorGrabber;
 import grabber.LivePrice;
-import jdk.management.resource.internal.inst.DatagramDispatcherRMHooks;
 import org.joda.time.DateTime;
 import util.TimeRange;
 
@@ -25,14 +24,7 @@ import static grabber.AlphaVantageEnum.*;
  * Created by Ailan on 9/7/2017.
  * OMG SO MUCH DUPLICATED CODE FROM STRATEGY BUILDER
  */
-public class DayStrategyBuilder {
-    protected double maxLossPercent = 0.1;
-    protected MovingAverage shortMA;
-    protected MovingAverage longMA;
-    protected TimeRange timeRange;
-    protected DateTime buyAfterDate;
-    protected double valueToFulfill;
-    protected boolean sellLHigher = false;
+public class DayStrategyBuilder extends StrategyBuilder<DayStrategyBuilder>{
 
     protected DayStrategyBuilder() {
     }
@@ -51,40 +43,10 @@ public class DayStrategyBuilder {
         System.out.println(transactions);
     }
 
-    public static DayStrategyBuilder aBuilder() {
-        return new DayStrategyBuilder();
+    public static StrategyBuilder<DayStrategyBuilder> aBuilder() {
+        return new StrategyBuilder<>();
     }
 
-    public DayStrategyBuilder withMaxLoss(double maxLoss) {
-        this.maxLossPercent = maxLoss;
-        return this;
-    }
-
-    public DayStrategyBuilder withMovingAverages(MovingAverage s, MovingAverage l) {
-        this.shortMA = s;
-        this.longMA = l;
-        return this;
-    }
-
-    public DayStrategyBuilder withTimeRange(TimeRange range) {
-        this.timeRange = range;
-        return this;
-    }
-
-    public DayStrategyBuilder withBuyAfterDate(DateTime buyAfter) {
-        this.buyAfterDate = buyAfter;
-        return this;
-    }
-
-    public DayStrategyBuilder withValueToFulfill(double valueToFulfill) {
-        this.valueToFulfill = valueToFulfill;
-        return this;
-    }
-
-    public DayStrategyBuilder withSellHigher(boolean sellHigher) {
-        this.sellLHigher = sellHigher;
-        return this;
-    }
 
     public boolean buyCondition(DayDataDao data, DateTime eod) {
 //        return true;
@@ -108,7 +70,7 @@ public class DayStrategyBuilder {
             }
             StockPriceDao sp = prices.get(i);
             data.add(new DayDataDao(stock.getSymbol(), sp.getDate(), sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getVolume(),
-                    adx, this.shortMA.getInterval(), this.longMA.getInterval(), 0));
+                    adx, getShortMA().getInterval(), getLongMA().getInterval(), 0));
         }
         return execute(data);
     }
@@ -116,8 +78,10 @@ public class DayStrategyBuilder {
     public List<TransactionRecord> execute(List<DayDataDao> data) {
         List<TransactionRecord> records = new LinkedList<>();
         try {
-            if (timeRange != null) {
-                data = data.stream().filter(s -> timeRange.isWithin(s.getDate())).collect(Collectors.toList());
+            MovingAverage shortMA = getShortMA();
+            MovingAverage longMA = getLongMA();
+            if (getTimeRange() != null) {
+                data = data.stream().filter(s -> getTimeRange().isWithin(s.getDate())).collect(Collectors.toList());
             }
 
             data = data.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
@@ -137,7 +101,7 @@ public class DayStrategyBuilder {
                 longMA.add(price);
                 rep++;
 
-                if (buyAfterDate == null || curDate.isAfter(buyAfterDate)) {
+                if (getBuyAfterDate() == null || curDate.isAfter(getBuyAfterDate())) {
                     double shortAvg = shortMA.getAverage();
                     double longAvg = longMA.getAverage();
 
@@ -151,7 +115,7 @@ public class DayStrategyBuilder {
                         holdingShares = 0;
                     }
 
-                    if (holdingShares > 0 && price <= holdingPrice * (1 - maxLossPercent)) {
+                    if (holdingShares > 0 && price <= holdingPrice * (1 - getMaxLossPercent())) {
                         records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
                         holdingShares = 0;
                     }
@@ -182,18 +146,10 @@ public class DayStrategyBuilder {
     }
 
     protected boolean sellCondition(double boughtPrice, double currentPrice, double spread){
-        if(sellLHigher) {
+        if(isSellHigher()) {
             return boughtPrice < currentPrice - spread;
         }
         return true;
-    }
-
-    protected int getNumSharesToBuy(double price) {
-        if (valueToFulfill == 0) {
-            return 1;
-        } else {
-            return new Double(valueToFulfill / price).intValue();
-        }
     }
 
     public static Map<DateTime, IndicatorDao> getIndicatorMap(String symbol) {

@@ -1,6 +1,7 @@
 import dao.StockDao;
 import db.SqliteDriver;
 import exchange.NASDAQ;
+import exchange.SP500;
 import exchange.StockExchange;
 import exchange.TSX;
 import grabber.DailyIndicatorGrabber;
@@ -18,8 +19,9 @@ public class Main {
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
 //        File file = new File(GlobalUtil.TSX_FEED);
 //        scrapeData("TSX.txt", TSX.getInstance());
-        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
-        scrapeData("otherlisted.txt", NASDAQ.getInstance());
+        scrapeData("SP500.txt", SP500.getInstance());
+//        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
+//        scrapeData("otherlisted.txt", NASDAQ.getInstance());
 
         System.out.println("Hello World!");
     }
