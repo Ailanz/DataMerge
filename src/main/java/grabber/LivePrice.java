@@ -8,10 +8,14 @@ import java.util.stream.Collectors;
 
 public class LivePrice {
     public static List<StockPriceDao> getDaysPrice(String symbol) {
+        return getDaysPrice(symbol, AlphaVantageEnum.Interval.FIVE);
+    }
+
+    public static List<StockPriceDao> getDaysPrice(String symbol, AlphaVantageEnum.Interval interval) {
         AlphaVantageBuilder builder = AlphaVantageBuilder.aBuilder()
                 .withFunction(AlphaVantageEnum.Function.TIME_SERIES_INTRADAY)
                 .withOutputSize(AlphaVantageEnum.OutputSize.FULL)
-                .withInterval(AlphaVantageEnum.Interval.FIVE);
+                .withInterval(interval);
         List<ResultData> results = builder.withSymbol(symbol).execute();
 
         List<StockPriceDao> prices = parseResultData(symbol, results).stream()

@@ -97,7 +97,7 @@ public class IndicatorDao implements AbstractDao {
         SqliteDriver.executeInsert(builder.execute());
     }
 
-    public static List<IndicatorDao> getAllIndicators(String symbol) {
+    public static synchronized List<IndicatorDao> getAllIndicators(String symbol) {
         String query = String.format("select * from Indicator where symbol = '%s' order by DATE desc", symbol);
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseIndicators(rs);
@@ -110,7 +110,7 @@ public class IndicatorDao implements AbstractDao {
         return map;
     }
 
-    public static List<IndicatorDao> getAllIndicators() {
+    public static synchronized List<IndicatorDao> getAllIndicators() {
         String query = "select * from Indicator order by DATE desc";
         ResultSet rs = SqliteDriver.executeQuery(query);
         return parseIndicators(rs);

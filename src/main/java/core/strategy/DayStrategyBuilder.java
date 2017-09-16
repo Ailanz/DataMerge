@@ -44,7 +44,7 @@ public class DayStrategyBuilder extends StrategyBuilder<DayStrategyBuilder>{
     }
 
     public static StrategyBuilder<DayStrategyBuilder> aBuilder() {
-        return new StrategyBuilder<>();
+        return new DayStrategyBuilder();
     }
 
 
@@ -55,25 +55,7 @@ public class DayStrategyBuilder extends StrategyBuilder<DayStrategyBuilder>{
 //       && indicator.getRsi14() < 60 && indicator.getRsi25() < 60;
     }
 
-    public List<TransactionRecord> execute(StockDao stock) {
-        return execute(stock, LivePrice.getDaysPrice(stock.getSymbol()), getIndicatorMap(stock.getSymbol()));
-    }
 
-    public List<TransactionRecord> execute(StockDao stock, List<StockPriceDao> prices, Map<DateTime, IndicatorDao> indicators) {
-        List<DayDataDao> data = new LinkedList<>();
-        double lastAdx = -1;
-        for(int i=0; i < prices.size(); i++){
-            double adx = lastAdx;
-            IndicatorDao ind = indicators.get(prices.get(i).getDate());
-            if(ind!=null) {
-                adx =ind.getAdx();
-            }
-            StockPriceDao sp = prices.get(i);
-            data.add(new DayDataDao(stock.getSymbol(), sp.getDate(), sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getVolume(),
-                    adx, getShortMA().getInterval(), getLongMA().getInterval(), 0));
-        }
-        return execute(data);
-    }
 
     public List<TransactionRecord> execute(List<DayDataDao> data) {
         List<TransactionRecord> records = new LinkedList<>();
@@ -150,13 +132,6 @@ public class DayStrategyBuilder extends StrategyBuilder<DayStrategyBuilder>{
             return boughtPrice < currentPrice - spread;
         }
         return true;
-    }
-
-    public static Map<DateTime, IndicatorDao> getIndicatorMap(String symbol) {
-        List<IndicatorDao> indicators = DailyIndicatorGrabber.getIndicators(symbol, Interval.FIVE, 7);
-        Map<DateTime, IndicatorDao> map = new HashMap<>();
-        indicators.forEach(i -> map.put(i.getDate(), i));
-        return map;
     }
 
 

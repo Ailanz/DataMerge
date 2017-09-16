@@ -6,9 +6,11 @@ import core.Book;
 import core.strategy.CandleStickStrategyBuilder;
 import core.strategy.DayStrategyBuilder;
 import core.TransactionRecord;
+import core.strategy.ExitIntervalEnum;
 import dao.*;
 import db.InsertionBuilder;
 import db.SqliteDriver;
+import grabber.AlphaVantageEnum;
 import grabber.LivePrice;
 import org.joda.time.DateTime;
 import ui.StockFilter;
@@ -54,12 +56,15 @@ public class DayTradeSimulator {
                 MovingAverage l = new ExponentialMovingAverage(data.get(0).getLongMA());
 
                 List<TransactionRecord> transactions = CandleStickStrategyBuilder.aBuilder()
-                        .withBuyAfterDate(minDate)
-                        .withTimeRange(timeRange)
-                        .withMovingAverages(s, l)
+//                        .withBuyAfterDate(minDate)
+//                        .withBuyAfterDate()
+//                        .withTimeRange(timeRange)
+//                        .withMovingAverages(s, l)
 //                        .withSellHigher(true)
+                        .withExitInterval(ExitIntervalEnum.NEVER)
                         .withValueToFulfill(200)
-                        .execute(data);
+                        .execute(stock);
+//                        .execute(data);
 
                 book.addTransaction(transactions);
             };
@@ -86,7 +91,7 @@ public class DayTradeSimulator {
         List<StockPriceDao> prices = LivePrice.getDaysPrice(stock.getSymbol()).stream()
                 .filter(s -> dataRange.isWithin(s.getDate())).collect(Collectors.toList());
 
-        Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(stock.getSymbol());
+        Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(stock.getSymbol(), AlphaVantageEnum.Interval.FIVE);
         InsertionBuilder builder = InsertionBuilder.aBuilder().withTableBuilder(DayDataDao.getTableBuilder());
 
         for (StockPriceDao price : prices) {

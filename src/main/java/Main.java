@@ -3,9 +3,9 @@ import db.SqliteDriver;
 import exchange.NASDAQ;
 import exchange.SP500;
 import exchange.StockExchange;
-import exchange.TSX;
 import grabber.DailyIndicatorGrabber;
 import grabber.DailyPriceGrabber;
+import ui.StockFilter;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,9 +17,11 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static void main(String[] args) throws IOException, URISyntaxException, SQLException, InterruptedException {
-//        File file = new File(GlobalUtil.TSX_FEED);
-//        scrapeData("TSX.txt", TSX.getInstance());
-        scrapeData("SP500.txt", SP500.getInstance());
+        List<StockDao> stockDaos = StockFilter.marketCapFilter(StockDao.getAllStocks());
+        processStock(NASDAQ.getInstance(), stockDaos);
+
+        //        scrapeData("TSX.txt", TSX.getInstance());
+//        scrapeData("SP500.txt", SP500.getInstance());
 //        scrapeData("nasdaqlisted.txt", NASDAQ.getInstance());
 //        scrapeData("otherlisted.txt", NASDAQ.getInstance());
 
@@ -30,6 +32,10 @@ public class Main {
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         File file = new File(classloader.getResource(textFile).getFile());
         List<StockDao> stocks = exchange.parseFeed(file);
+        processStock(exchange, stocks);
+    }
+
+    private static void processStock(StockExchange exchange, List<StockDao> stocks) throws InterruptedException {
         List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
         DailyPriceGrabber.populateStockPrices(stockSymbols);
         SqliteDriver.insertStockSymbols(stockSymbols, exchange.getExchange());

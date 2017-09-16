@@ -22,29 +22,31 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
         return new CandleStickStrategyBuilder();
     }
 
+    @Override
+    public boolean buyCondition(DayDataDao data) {
+        return super.buyCondition(data);
+    }
+
+    @Override
+    public boolean sellCondition(DayDataDao data) {
+        return super.sellCondition(data);
+    }
+
     public boolean buyCondition(DayDataDao data, DateTime eod) {
         return data.getDate().isBefore(eod);
     }
 
+    @Override
     public List<TransactionRecord> execute(List<DayDataDao> data) {
         List<TransactionRecord> records = new LinkedList<>();
         try {
-            if (getTimeRange() != null) {
-                data = data.stream().filter(s -> getTimeRange().isWithin(s.getDate())).collect(Collectors.toList());
-            }
-
-            data = data.stream().sorted((o1, o2) -> o1.getDate().isBefore(o2.getDate()) ? -1 : 1).collect(Collectors.toList());
 
             double spread = 0.05;
-            int holdingShares = 0;
-            double holdingPrice = 0;
+
             CandleStickPattern pattern = new CandleStickPattern();
             for (DayDataDao sp : data) {
                 CandleStick stick = new CandleStick(sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getDate(), sp.getVolume());
                 pattern.addCandleStick(stick);
-                if(pattern.isThreeLineStrikes()){
-                    System.out.println("YUSH! " + sp.getSymbol());
-                }
                 double price = sp.getClose();
                 int numOfSharesToBuy = getNumSharesToBuy(price + spread);
                 DateTime curDate = sp.getDate();
@@ -52,21 +54,16 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
 //                CandleStick stick = new CandleStick(sp.getOp)
                 if (getBuyAfterDate() == null || curDate.isAfter(getBuyAfterDate())) {
 
-                    if (holdingShares > 0 && curDate.isAfter(eod)) {
-                        records.add(TransactionRecord.exit(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
-                        holdingShares = 0;
+
+                    if(holdingPrice > 0 && ( pattern.isBearishEngulfing()) && sellCondition(sp)) {
+                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price - spread));
+                        holdingPrice = 0;
                     }
 
-                    if(holdingShares > 0 && ( pattern.isBearishEngulfing())) {
-//                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), holdingShares, price - spread));
-//                        holdingShares = 0;
-                    }
-
-                    if (pattern.isThreeLineStrikes()) {
-                        if (holdingShares == 0 && buyCondition(sp, eod)) {
+                    if (pattern.isBullishEngulfing() && buyCondition(sp)) {
+                        if (holdingPrice == 0 && buyCondition(sp, eod)) {
                             records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;
-                            holdingShares = numOfSharesToBuy;
                         }
                     }
 

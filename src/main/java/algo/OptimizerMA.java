@@ -9,6 +9,7 @@ import dao.StockDao;
 import dao.StockPriceDao;
 import db.InsertionBuilder;
 import db.SqliteDriver;
+import grabber.AlphaVantageEnum;
 import grabber.LivePrice;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
@@ -88,7 +89,7 @@ public class OptimizerMA {
         stocks.forEach(st -> {
             Runnable task = () -> {
                 List<StockPriceDao> prices = LivePrice.getDaysPrice(st.getSymbol());
-                Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(st.getSymbol());
+                Map<DateTime, IndicatorDao> indicators = DayStrategyBuilder.getIndicatorMap(st.getSymbol(), AlphaVantageEnum.Interval.FIVE);
                 TimeRange timeRange = new TimeRange(DateTime.now().minusMonths(3));
 
                 int maxShort = min;
