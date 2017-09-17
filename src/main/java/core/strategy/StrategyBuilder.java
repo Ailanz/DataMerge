@@ -1,6 +1,7 @@
 package core.strategy;
 
 import algo.MovingAverage;
+import algo.VolumeAverage;
 import core.TransactionRecord;
 import dao.DayDataDao;
 import dao.IndicatorDao;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  */
 public abstract class StrategyBuilder<E> {
     private double maxLossPercent = 0.1;
+    private double sellLimit;
     private MovingAverage shortMA;
     private MovingAverage longMA;
     private TimeRange timeRange;
@@ -32,6 +34,7 @@ public abstract class StrategyBuilder<E> {
     private ExitIntervalEnum exitInterval = ExitIntervalEnum.NEVER;
     private AlphaVantageEnum.Interval interval = AlphaVantageEnum.Interval.DAILY;
     public double holdingPrice;
+    protected VolumeAverage volumeAverage = new VolumeAverage();
 
     protected StrategyBuilder() {
     }
@@ -82,6 +85,11 @@ public abstract class StrategyBuilder<E> {
         return (E) this;
     }
 
+    public E withSellLimit(double sellLimit) {
+        this.sellLimit = sellLimit;
+        return (E) this;
+    }
+
 
     protected int getNumSharesToBuy(double price) {
         if (getValueToFulfill() == 0) {
@@ -96,17 +104,34 @@ public abstract class StrategyBuilder<E> {
         if (buyAfterDate != null && data.getDate().isBefore(buyAfterDate)) {
             return false;
         }
+
+        DateTime eod = new DateTime(data.getDate().toString()).withHourOfDay(15).withMinuteOfHour(30);
+        if (exitInterval == ExitIntervalEnum.DAILY && data.getDate().isAfter(eod)) {
+            return false;
+        }
         return true;
     }
 
     public boolean sellCondition(DayDataDao data) {
         //dont sell be default
         DateTime eod = new DateTime(data.getDate().toString()).withHourOfDay(15).withMinuteOfHour(30);
+        if(holdingPrice==0) {
+            return false;
+        }
+
         if (exitInterval == ExitIntervalEnum.DAILY && data.getDate().isAfter(eod)) {
             return true;
         }
 
         if (maxLossPercent > 0 && holdingPrice > 0 && data.getClose() <= holdingPrice * (1 - getMaxLossPercent())) {
+            return true;
+        }
+
+        if(sellHigher && data.getClose() < holdingPrice) {
+            return true;
+        }
+
+        if(sellLimit !=0 && data.getClose() > holdingPrice * sellLimit) {
             return true;
         }
 
@@ -181,5 +206,25 @@ public abstract class StrategyBuilder<E> {
 
     public double getValueToFulfill() {
         return valueToFulfill;
+    }
+
+    public double getSellLimit() {
+        return sellLimit;
+    }
+
+    public ExitIntervalEnum getExitInterval() {
+        return exitInterval;
+    }
+
+    public AlphaVantageEnum.Interval getInterval() {
+        return interval;
+    }
+
+    public double getHoldingPrice() {
+        return holdingPrice;
+    }
+
+    public VolumeAverage getVolumeAverage() {
+        return volumeAverage;
     }
 }

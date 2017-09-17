@@ -32,7 +32,8 @@ public class CandleStickPattern {
         }
         CandleStick bull = data.get(data.size() - 2);
         CandleStick bear = data.get(data.size() - 1);
-        return bear.isBlack() && bull.isWhite() && bull.getOpen() > bear.getClose() && bull.getClose() < bear.getOpen();
+        return bear.isBlack() && bull.isWhite() && bull.getOpen() > bear.getClose() && bear.getBodyLength() > bull.getBodyLength() * 1;
+        //relax constraint
     }
 
     public boolean isBullishEngulfing(){
@@ -42,7 +43,8 @@ public class CandleStickPattern {
         }
         CandleStick bear = data.get(data.size() - 2);
         CandleStick bull = data.get(data.size() - 1);
-        return bear.isBlack() && bull.isWhite() && bull.getOpen() < bear.getClose() && bull.getClose() > bear.getOpen();
+        return bear.isBlack() && bull.isWhite()  && bull.getClose() > bear.getOpen() && bull.getBodyLength() > bear.getBodyLength() * 2;
+        //&& bull.getOpen() < bear.getClose()   relax restraint
     }
 
     public boolean isThreeLineStrikes() {

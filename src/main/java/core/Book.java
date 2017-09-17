@@ -63,13 +63,13 @@ public class Book {
         double totalPurchase = 0;
 
         double reusableCash = 0;
-        Map<String, Double> holdings = new HashMap<>();
+        Map<String, TransactionRecord> holdings = new HashMap<>();
         List<TransactionRecord> records =  masterList.stream().sorted(Comparator.comparing(TransactionRecord::getDate)).collect(Collectors.toList());
 
         for(TransactionRecord r : records) {
             if (r.getType() == TransactionRecord.Type.BUY) {
                 double price = r.getNumOfShare() * r.getPrice();
-                holdings.put(r.getSymbol(), price);
+                holdings.put(r.getSymbol(), r);
 
                 if(reusableCash >= price) {
                     reusableCash -= price;
@@ -83,19 +83,33 @@ public class Book {
                 if(holdings.get(r.getSymbol())==null) {
                     throw new RuntimeException("ERR");
                 }
-                double profit = (r.getPrice()* r.getNumOfShare()) - (holdings.get(r.getSymbol()));
+                System.out.println("BUY: " + r.getSymbol() + " at " + holdings.get(r.getSymbol()).getPrice() + " AT " + holdings.get(r.getSymbol()).getDate());
+                double profit = r.getNumOfShare()*(r.getPrice() - holdings.get(r.getSymbol()).getPrice());
                 totalRealized += profit;
                 reusableCash += (r.getPrice()* r.getNumOfShare());
-                holdings.put(r.getSymbol(), 0d);
+                holdings.put(r.getSymbol(), null);
                 totalSells++;
+                System.out.println("SELL: " + r.getSymbol() + " at " + r.getPrice() + " AT " + r.getDate());
+                System.out.println("PROFIT: " + profit);
+                System.out.println("-----------------------");
             }
 
             if (r.getType() == TransactionRecord.Type.EXIT){
-                double profit = (r.getPrice()* r.getNumOfShare()) - (holdings.get(r.getSymbol()));
+                double profit = (r.getPrice()* r.getNumOfShare()) - (holdings.get(r.getSymbol()).getPrice());
                 totalRealized += profit;
                 reusableCash += profit;
-                holdings.put(r.getSymbol(), 0d);
+                holdings.put(r.getSymbol(), null);
                 totalExits++;
+                System.out.println("EXIT: " + r.getSymbol() + " at " + r.getPrice() + " AT " + r.getDate());
+            }
+        }
+
+        for(Map.Entry<String, TransactionRecord> e : holdings.entrySet()){
+            if(e.getValue() != null) {
+                totalRealized += e.getValue().getNumOfShare() * (StockDao.getStock(e.getKey()).getLatestPrice().getClose() - e.getValue().getPrice());
+                totalExits++;
+                System.out.println("DEFAULT: " + e.getValue().getSymbol() + " at " + e.getValue().getPrice() + " AT " + e.getValue().getDate());
+
             }
         }
 
