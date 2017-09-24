@@ -20,6 +20,7 @@ public class StockFilterBuilder {
     private StockExchange stockExchange = null;
     private Boolean lowerThanTarget = null;
     private double maxSharePrice = Double.MAX_VALUE;
+    private double minSharePrice = Double.MIN_VALUE;
     private boolean positiveMA = false;
 
     private StockFilterBuilder() {
@@ -36,6 +37,11 @@ public class StockFilterBuilder {
 
     public StockFilterBuilder withMaxSharePrice(double max) {
         this.maxSharePrice = max;
+        return this;
+    }
+
+    public StockFilterBuilder withMinSharePrice(double min) {
+        this.minSharePrice = min;
         return this;
     }
 
@@ -71,6 +77,7 @@ public class StockFilterBuilder {
                 .filter(this::filterByTargetPrice)
                 .filter(this::filterAverageVolume)
                 .filter(s->s.getLatestPrice().getClose() < maxSharePrice)
+                .filter(s->s.getLatestPrice().getClose() > minSharePrice)
                 .filter(this::filterByPositiveMovingAverageValue)
                 .filter(s -> s.getLatestPrice().getDate().isAfter(DateTime.now().minusDays(15)))
                 .collect(Collectors.toList());

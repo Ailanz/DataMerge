@@ -31,9 +31,9 @@ public class LongTradeSimulator {
 
             List<TransactionRecord> transactions = CandleStickStrategyBuilder.aBuilder()
                     .withExitInterval(ExitIntervalEnum.NEVER)
-                    .withBuyAfterDate(DateTime.now().minusDays(60))
+                    .withBuyAfterDate(DateTime.now().minusDays(30))
 //                    .withSellLimit(1.03)
-//                    .withValueToFulfill(100)
+                    .withValueToFulfill(20)
                     .execute(stock);
 
             book.addTransaction(transactions);

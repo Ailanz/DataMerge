@@ -57,6 +57,7 @@ public class Book {
     public void printSummaryTemporal() {
         double totalRealized = 0;
         double totalUnrealized = 0;
+        double totaalPotentialProfit = 0;
         double totalBuys = 0;
         double totalSells = 0;
         double totalExits = 0;
@@ -85,12 +86,14 @@ public class Book {
                 }
                 System.out.println("BUY: " + r.getSymbol() + " at " + holdings.get(r.getSymbol()).getPrice() + " AT " + holdings.get(r.getSymbol()).getDate());
                 double profit = r.getNumOfShare()*(r.getPrice() - holdings.get(r.getSymbol()).getPrice());
+                double potentialProft = r.getNumOfShare()*(holdings.get(r.getSymbol()).getMaxPrice() - holdings.get(r.getSymbol()).getPrice());
                 totalRealized += profit;
+                totaalPotentialProfit += potentialProft;
                 reusableCash += (r.getPrice()* r.getNumOfShare());
                 holdings.put(r.getSymbol(), null);
                 totalSells++;
                 System.out.println("SELL: " + r.getSymbol() + " at " + r.getPrice() + " AT " + r.getDate());
-                System.out.println("PROFIT: " + profit);
+                System.out.println("PROFIT: " + profit + " POTENTIAL_PROFIT: " +  potentialProft);
                 System.out.println("-----------------------");
             }
 
@@ -106,9 +109,11 @@ public class Book {
 
         for(Map.Entry<String, TransactionRecord> e : holdings.entrySet()){
             if(e.getValue() != null) {
-                totalRealized += e.getValue().getNumOfShare() * (StockDao.getStock(e.getKey()).getLatestPrice().getClose() - e.getValue().getPrice());
+                double profit = e.getValue().getNumOfShare() * (StockDao.getStock(e.getKey()).getLatestPrice().getClose() - e.getValue().getPrice());
+                totaalPotentialProfit += e.getValue().getNumOfShare() * ( e.getValue().getMaxPrice() - e.getValue().getPrice());
+                totalRealized += profit;
                 totalExits++;
-                System.out.println("DEFAULT: " + e.getValue().getSymbol() + " at " + e.getValue().getPrice() + " AT " + e.getValue().getDate());
+                System.out.println("DEFAULT: " + e.getValue().getSymbol() + " at " + e.getValue().getPrice() + " : " + profit + " AT " + e.getValue().getDate());
 
             }
         }
@@ -116,8 +121,9 @@ public class Book {
         System.out.println("--------------------------------------------------");
         System.out.println("Total Spent: " + totalPurchase);
         System.out.println(String.format("Total Buys: %s, Sells: %s, Exits: %s", String.valueOf(totalBuys),String.valueOf(totalSells),String.valueOf(totalExits)));
-        System.out.println(String.format("Total Realized: %s, Unrealized: %s", String.valueOf(totalRealized), String.valueOf(totalUnrealized)));
+        System.out.println(String.format("Total Realized: %s, Potential: %s", String.valueOf(totalRealized), String.valueOf(totaalPotentialProfit)));
         System.out.println(String.format("Return: %s",String.valueOf(1 + (totalRealized + totalUnrealized)/totalPurchase)));
+        System.out.println(String.format("Return Potential: %s",String.valueOf(1 + (totaalPotentialProfit + totalUnrealized)/totalPurchase)));
 
     }
 

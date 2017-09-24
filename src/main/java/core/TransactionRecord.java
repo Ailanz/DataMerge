@@ -1,20 +1,20 @@
 package core;
 
+import lombok.Data;
 import org.joda.time.DateTime;
 
 /**
  * Created by Ailan on 9/4/2017.
  */
+
+@Data
 public class TransactionRecord {
     private Type type;
-
     private String symbol;
-
     private DateTime date;
-
     private double price;
-
     private int numOfShare;
+    private double maxPrice;
 
     private TransactionRecord(Type type, String symbol, DateTime date, int numOfShare, double price) {
         this.symbol = symbol;
@@ -40,16 +40,10 @@ public class TransactionRecord {
         return new TransactionRecord(Type.EXIT, symbol, date, numOfShare, price);
     }
 
-    public Type getType() {
-        return type;
-    }
-
-    public DateTime getDate() {
-        return date;
-    }
-
-    public int getNumOfShare() {
-        return numOfShare;
+    public void processPotentialEarning(double d){
+        if(d > maxPrice && this.type==Type.BUY) {
+            maxPrice = d;
+        }
     }
 
     public double getPrice() {

@@ -26,7 +26,8 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
 
     @Override
     public boolean buyCondition(DayDataDao data) {
-        return super.buyCondition(data) && volumeAverage.isAboveAverag();
+        return super.buyCondition(data);
+//        && volumeAverage.isAboveAverag();
     }
 
     @Override
@@ -47,19 +48,20 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
                 CandleStick stick = new CandleStick(sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getDate(), sp.getVolume());
                 pattern.addCandleStick(stick);
                 double price = sp.getClose();
+                records.forEach(r->r.processPotentialEarning(price));
                 int numOfSharesToBuy = getNumSharesToBuy(price + spread);
                 DateTime curDate = sp.getDate();
                 DateTime eod = new DateTime(curDate.toString()).withHourOfDay(15).withMinuteOfHour(0);
 //                CandleStick stick = new CandleStick(sp.getOp)
                 if (getBuyAfterDate() == null || curDate.isAfter(getBuyAfterDate())) {
 
-                    if(holdingPrice > 0 && ( pattern.isBearishEngulfing()) || sellCondition(sp)) {
+                    if(holdingPrice > 0 && (  pattern.isBearishAbandonedBaby() || sellCondition(sp))) {
                         records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price - spread));
                         holdingPrice = 0;
                         continue;
                     }
 
-                    if (pattern.isBullishEngulfing() && buyCondition(sp)) {
+                    if (pattern.isBullishAbandonedBaby() && buyCondition(sp)) {
                         if (holdingPrice == 0 ) {
                             records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;
