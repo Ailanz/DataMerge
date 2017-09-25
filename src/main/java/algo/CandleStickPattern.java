@@ -78,6 +78,18 @@ public class CandleStickPattern {
                 && bear.getBodyLength() > baby.getOpen()*scale;
     }
 
+    public boolean isPreBearishAbandonedBaby(){
+        if(data.size() < 2) {
+            return false;
+        }
+        CandleStick bull = data.get(data.size() - 2);
+        CandleStick baby = data.get(data.size() - 1);
+
+        double scale = 0.03;
+        return bull.isWhite()  && baby.isDoji() && baby.getOpen() > bull.getClose()
+                && bull.getBodyLength() > baby.getOpen()*scale;
+    }
+
     public boolean isBullishAbandonedBaby(){
         if(data.size() < 3) {
             return false;
@@ -90,6 +102,21 @@ public class CandleStickPattern {
 
         return bull.isWhite() && bear.isBlack() && baby.isDoji() && baby.getOpen() < bull.getOpen()
                 && baby.getOpen() < bear.getClose() && bull.getBodyLength() > baby.getOpen()*scale
+                && bear.getBodyLength() > baby.getOpen()*scale;
+    }
+
+    public boolean isPreBullishAbandonedBaby(){
+        if(data.size() < 2) {
+            return false;
+        }
+        CandleStick bear = data.get(data.size() - 2);
+        CandleStick baby = data.get(data.size() - 1);
+
+        double scale = 0.03;
+
+        return bear.isBlack() && baby.isDoji()
+                && baby.getOpen() < bear.getClose()
+                && baby.getClose() < bear.getClose()
                 && bear.getBodyLength() > baby.getOpen()*scale;
     }
 }

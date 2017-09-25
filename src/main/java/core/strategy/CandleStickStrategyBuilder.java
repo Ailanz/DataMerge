@@ -3,6 +3,7 @@ package core.strategy;
 import algo.CandleStick;
 import algo.CandleStickPattern;
 import algo.MovingAverage;
+import core.Notification;
 import core.TransactionRecord;
 import dao.DayDataDao;
 import org.joda.time.DateTime;
@@ -44,26 +45,26 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
             double spread = 0.05;
             CandleStickPattern pattern = new CandleStickPattern();
             for (DayDataDao sp : data) {
-                volumeAverage.add(sp.getVolume());
-                CandleStick stick = new CandleStick(sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getDate(), sp.getVolume());
-                pattern.addCandleStick(stick);
                 double price = sp.getClose();
-                records.forEach(r->r.processPotentialEarning(price));
+                preprossData(records, spread, pattern, sp, price);
                 int numOfSharesToBuy = getNumSharesToBuy(price + spread);
-                DateTime curDate = sp.getDate();
-                DateTime eod = new DateTime(curDate.toString()).withHourOfDay(15).withMinuteOfHour(0);
-//                CandleStick stick = new CandleStick(sp.getOp)
-                if (getBuyAfterDate() == null || curDate.isAfter(getBuyAfterDate())) {
+                if (getBuyAfterDate() == null || sp.getDate().isAfter(getBuyAfterDate())) {
+                    if(pattern.isBullishAbandonedBaby()){
+                        Notification.buy(sp.getSymbol(), price, "Bullish Abandoned Baby", sp.getDate());
+                    }
+                    if(pattern.isPreBullishAbandonedBaby()){
+                        Notification.watch(sp.getSymbol(), price, "PRE Bullish Abandoned Baby", sp.getDate());
+                    }
 
                     if(holdingPrice > 0 && (  pattern.isBearishAbandonedBaby() || sellCondition(sp))) {
-                        records.add(TransactionRecord.sell(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price - spread));
+                        records.add(TransactionRecord.sell(DateTime.parse(sp.getDate().toString()), sp.getSymbol(), numOfSharesToBuy, price - spread));
                         holdingPrice = 0;
                         continue;
                     }
 
                     if (pattern.isBullishAbandonedBaby() && buyCondition(sp)) {
                         if (holdingPrice == 0 ) {
-                            records.add(TransactionRecord.buy(DateTime.parse(curDate.toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
+                            records.add(TransactionRecord.buy(DateTime.parse(sp.getDate().toString()), sp.getSymbol(), numOfSharesToBuy, price + spread));
                             holdingPrice = price + spread;
                             continue;
                         }
@@ -81,5 +82,11 @@ public class CandleStickStrategyBuilder extends StrategyBuilder<CandleStickStrat
             StockPriceDataSet.saveChart(StockPriceDataSet.convertToXYDataSet(buyAfterFilter), data.get(0).getSymbol());
         }
         return records;
+    }
+
+    private void preprossData(List<TransactionRecord> records, double spread, CandleStickPattern pattern, DayDataDao sp, double price) {
+        volumeAverage.add(sp.getVolume());
+        pattern.addCandleStick(new CandleStick(sp.getOpen(), sp.getClose(), sp.getHigh(), sp.getLow(), sp.getDate(), sp.getVolume()));
+        records.forEach(r->r.processPotentialEarning(price - spread));
     }
 }

@@ -2,6 +2,7 @@ package core;
 
 import lombok.Data;
 import org.joda.time.DateTime;
+import util.PriceUnit;
 
 /**
  * Created by Ailan on 9/4/2017.
@@ -21,7 +22,8 @@ public class TransactionRecord {
         this.type = type;
         this.date = date;
         this.numOfShare = numOfShare;
-        this.price = price;
+        this.price = PriceUnit.round2Decimal(price);
+        this.maxPrice = -1;
     }
 
     public static TransactionRecord buy(DateTime date, String symbol, int numOfShare, double price) {
@@ -42,12 +44,12 @@ public class TransactionRecord {
 
     public void processPotentialEarning(double d){
         if(d > maxPrice && this.type==Type.BUY) {
-            maxPrice = d;
+            maxPrice = PriceUnit.round2Decimal(d);
         }
     }
 
     public double getPrice() {
-        return price;
+        return PriceUnit.round2Decimal(price);
     }
     public enum Type {
         BUY,

@@ -1,6 +1,7 @@
 package core;
 
 import dao.StockDao;
+import util.PriceUnit;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -71,12 +72,13 @@ public class Book {
             if (r.getType() == TransactionRecord.Type.BUY) {
                 double price = r.getNumOfShare() * r.getPrice();
                 holdings.put(r.getSymbol(), r);
+                totalPurchase += price;
 
-                if(reusableCash >= price) {
-                    reusableCash -= price;
-                }else {
-                    totalPurchase += price;
-                }
+//                if(reusableCash >= price) {
+//                    reusableCash -= price;
+//                }else {
+//                    totalPurchase += price;
+//                }
                 totalBuys++;
             }
 
@@ -84,16 +86,17 @@ public class Book {
                 if(holdings.get(r.getSymbol())==null) {
                     throw new RuntimeException("ERR");
                 }
+                System.out.println("Shares: " + r.getNumOfShare());
                 System.out.println("BUY: " + r.getSymbol() + " at " + holdings.get(r.getSymbol()).getPrice() + " AT " + holdings.get(r.getSymbol()).getDate());
                 double profit = r.getNumOfShare()*(r.getPrice() - holdings.get(r.getSymbol()).getPrice());
-                double potentialProft = r.getNumOfShare()*(holdings.get(r.getSymbol()).getMaxPrice() - holdings.get(r.getSymbol()).getPrice());
+                double potentialProft = Math.max(profit,r.getNumOfShare()*(holdings.get(r.getSymbol()).getMaxPrice() - holdings.get(r.getSymbol()).getPrice()));
                 totalRealized += profit;
                 totaalPotentialProfit += potentialProft;
                 reusableCash += (r.getPrice()* r.getNumOfShare());
                 holdings.put(r.getSymbol(), null);
                 totalSells++;
                 System.out.println("SELL: " + r.getSymbol() + " at " + r.getPrice() + " AT " + r.getDate());
-                System.out.println("PROFIT: " + profit + " POTENTIAL_PROFIT: " +  potentialProft);
+                System.out.println("PROFIT: " + PriceUnit.round2Decimal(profit) + " POTENTIAL: " +  PriceUnit.round2Decimal(potentialProft));
                 System.out.println("-----------------------");
             }
 
@@ -109,21 +112,24 @@ public class Book {
 
         for(Map.Entry<String, TransactionRecord> e : holdings.entrySet()){
             if(e.getValue() != null) {
-                double profit = e.getValue().getNumOfShare() * (StockDao.getStock(e.getKey()).getLatestPrice().getClose() - e.getValue().getPrice());
-                totaalPotentialProfit += e.getValue().getNumOfShare() * ( e.getValue().getMaxPrice() - e.getValue().getPrice());
+                TransactionRecord rec = e.getValue();
+                double profit = rec.getNumOfShare() * (StockDao.getStock(e.getKey()).getLatestPrice().getClose() - rec.getPrice());
+                double potentialProfit = Math.max(profit, rec.getNumOfShare() * (rec.getMaxPrice() - rec.getPrice()));
+                totaalPotentialProfit += potentialProfit;
                 totalRealized += profit;
                 totalExits++;
-                System.out.println("DEFAULT: " + e.getValue().getSymbol() + " at " + e.getValue().getPrice() + " : " + profit + " AT " + e.getValue().getDate());
+                System.out.println("DEFAULT: " + rec.getSymbol() + " Shares: " + rec.getNumOfShare() + " at " + PriceUnit.round2Decimal(rec.getPrice()) + " : Profit: "
+                        + PriceUnit.round2Decimal(profit) + " Potential: " + PriceUnit.round2Decimal(potentialProfit) + " | " + rec.getDate());
 
             }
         }
 
         System.out.println("--------------------------------------------------");
-        System.out.println("Total Spent: " + totalPurchase);
+        System.out.println("Total Spent: " + PriceUnit.round2Decimal(totalPurchase));
         System.out.println(String.format("Total Buys: %s, Sells: %s, Exits: %s", String.valueOf(totalBuys),String.valueOf(totalSells),String.valueOf(totalExits)));
         System.out.println(String.format("Total Realized: %s, Potential: %s", String.valueOf(totalRealized), String.valueOf(totaalPotentialProfit)));
-        System.out.println(String.format("Return: %s",String.valueOf(1 + (totalRealized + totalUnrealized)/totalPurchase)));
-        System.out.println(String.format("Return Potential: %s",String.valueOf(1 + (totaalPotentialProfit + totalUnrealized)/totalPurchase)));
+        System.out.println(String.format("Return: %s",String.valueOf(PriceUnit.round2Decimal(1 + (totalRealized + totalUnrealized)/totalPurchase))));
+        System.out.println(String.format("Return Potential: %s",String.valueOf( PriceUnit.round2Decimal(1 + (totaalPotentialProfit + totalUnrealized)/totalPurchase))));
 
     }
 

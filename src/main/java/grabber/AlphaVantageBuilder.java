@@ -128,7 +128,7 @@ public class AlphaVantageBuilder extends UrlHelper {
         if(dates.size()==0 && retry > 0) {
             return getResult(targetUrl, retry - 1);
         }
-        dates.remove(0);   //exclude current incomplete data
+//        dates.remove(0);   //exclude current incomplete data
         List<ResultData> ret = new LinkedList<>();
         for (Pair<DateTime, JsonNode> p : dates) {
             HashMap<String, JsonNode> data = new HashMap<>();

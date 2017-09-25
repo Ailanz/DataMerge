@@ -39,7 +39,7 @@ public class Main {
         List<String> stockSymbols = stocks.stream().map(s -> s.getSymbol()).collect(Collectors.toList());
         DailyPriceGrabber.populateStockPrices(stockSymbols);
         SqliteDriver.insertStockSymbols(stockSymbols, exchange.getExchange());
-        DailyIndicatorGrabber.populateIndicators(stockSymbols);
+//        DailyIndicatorGrabber.populateIndicators(stockSymbols);
     }
 
 

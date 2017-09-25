@@ -95,7 +95,8 @@ public abstract class StrategyBuilder<E> {
         if (getValueToFulfill() == 0) {
             return 1;
         } else {
-            return new Double(getValueToFulfill() / price).intValue();
+            int numShares = new Double(getValueToFulfill() / price).intValue();
+            return numShares==0 ? 1 : numShares;
         }
     }
 

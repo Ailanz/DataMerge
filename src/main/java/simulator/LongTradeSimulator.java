@@ -1,6 +1,7 @@
 package simulator;
 
 import core.Book;
+import core.Notification;
 import core.TransactionRecord;
 import core.strategy.CandleStickStrategyBuilder;
 import core.strategy.ExitIntervalEnum;
@@ -41,6 +42,7 @@ public class LongTradeSimulator {
         }
 
         book.printSummaryTemporal();
+        Notification.summary();
         return allTransactions;
     }
 }
